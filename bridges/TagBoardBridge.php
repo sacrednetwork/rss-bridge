@@ -4,6 +4,7 @@ class TagBoardBridge extends BridgeAbstract{
 	const MAINTAINER = "Pitchoule";
 	const NAME = "TagBoard";
 	const URI = "http://www.TagBoard.com/";
+	const CACHE_TIMEOUT = 21600; // 6h
 	const DESCRIPTION = "Returns most recent results from TagBoard.";
 
     const PARAMETERS = array( array(
@@ -16,8 +17,8 @@ class TagBoardBridge extends BridgeAbstract{
     public function collectData(){
         $link = 'https://post-cache.tagboard.com/search/' .$this->getInput('u');
 
-        $html = $this->getSimpleHTMLDOM($link)
-          or $this->returnServerError('Could not request TagBoard for : ' . $link);
+        $html = getSimpleHTMLDOM($link)
+          or returnServerError('Could not request TagBoard for : ' . $link);
         $parsed_json = json_decode($html);
 
         foreach($parsed_json->{'posts'} as $element) {
@@ -36,10 +37,6 @@ class TagBoardBridge extends BridgeAbstract{
 
     public function getName(){
         return 'tagboard - ' .$this->getInput('u');
-    }
-
-    public function getCacheDuration(){
-        return 21600; // 6 hours
     }
 }
 

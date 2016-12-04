@@ -5,6 +5,7 @@ class VkBridge extends BridgeAbstract {
     const MAINTAINER = "ahiles3005";
     const NAME = "VK.com";
     const URI = "http://vk.com/";
+    const CACHE_TIMEOUT = 300; // 5min
     const DESCRIPTION = "Working with open pages";
     const PARAMETERS=array( array(
             'u'=>array(
@@ -18,8 +19,8 @@ class VkBridge extends BridgeAbstract {
       return static::URI.urlencode($this->getInput('u'));
     }
     public function collectData(){
-        $text_html = $this->getContents($this->getURI())
-          or $this->returnServerError('No results for group or user name "'.$this->getInput('u').'".');
+        $text_html = getContents($this->getURI())
+          or returnServerError('No results for group or user name "'.$this->getInput('u').'".');
 
         $text_html = iconv('windows-1251', 'utf-8', $text_html);
         $html = str_get_html($text_html);
@@ -45,9 +46,4 @@ class VkBridge extends BridgeAbstract {
             // var_dump($item['date']);
         }
     }
-
-    public function getCacheDuration() {
-        return 300; // 5 minutes
-    }
-
 }

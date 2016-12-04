@@ -4,6 +4,7 @@ class OpenClassroomsBridge extends BridgeAbstract{
 	const MAINTAINER = "sebsauvage";
 	const NAME = "OpenClassrooms Bridge";
 	const URI = "https://openclassrooms.com/";
+	const CACHE_TIMEOUT = 21600; // 6h
 	const DESCRIPTION = "Returns latest tutorials from OpenClassrooms.";
 
     const PARAMETERS = array( array(
@@ -31,8 +32,8 @@ class OpenClassroomsBridge extends BridgeAbstract{
     }
 
     public function collectData(){
-        $html = $this->getSimpleHTMLDOM($this->getURI())
-          or $this->returnServerError('Could not request OpenClassrooms.');
+        $html = getSimpleHTMLDOM($this->getURI())
+          or returnServerError('Could not request OpenClassrooms.');
 
         foreach($html->find('.courseListItem') as $element) {
                 $item = array();
@@ -41,9 +42,5 @@ class OpenClassroomsBridge extends BridgeAbstract{
                 $item['content'] = $element->find('slidingItem__descriptionContent', 0)->plaintext;
                 $this->items[] = $item;
         }
-    }
-
-    public function getCacheDuration(){
-        return 21600; // 6 hours
     }
 }

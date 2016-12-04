@@ -4,6 +4,7 @@ class WhydBridge extends BridgeAbstract{
 	const MAINTAINER = "kranack";
 	const NAME = "Whyd Bridge";
 	const URI = "http://www.whyd.com/";
+	const CACHE_TIMEOUT = 600; // 10min
 	const DESCRIPTION = "Returns 10 newest music from user profile";
 
     const PARAMETERS = array( array(
@@ -19,19 +20,19 @@ class WhydBridge extends BridgeAbstract{
 		$html = '';
         if (strlen(preg_replace("/[^0-9a-f]/",'', $this->getInput('u'))) == 24){
             // is input the userid ?
-            $html = $this->getSimpleHTMLDOM(
+            $html = getSimpleHTMLDOM(
                 self::URI.'u/'.preg_replace("/[^0-9a-f]/",'', $this->getInput('u'))
-            ) or $this->returnServerError('No results for this query.');
+            ) or returnServerError('No results for this query.');
         } else { // input may be the username
-            $html = $this->getSimpleHTMLDOM(
+            $html = getSimpleHTMLDOM(
                 self::URI.'search?q='.urlencode($this->getInput('u'))
-            ) or $this->returnServerError('No results for this query.');
+            ) or returnServerError('No results for this query.');
 
             for ($j = 0; $j < 5; $j++) {
                 if (strtolower($html->find('div.user', $j)->find('a',0)->plaintext) == strtolower($this->getInput('u'))) {
-                    $html = $this->getSimpleHTMLDOM(
+                    $html = getSimpleHTMLDOM(
                         self::URI . $html->find('div.user', $j)->find('a', 0)->getAttribute('href')
-                    ) or $this->returnServerError('No results for this query');
+                    ) or returnServerError('No results for this query');
                     break;
                 }
             }
@@ -51,10 +52,6 @@ class WhydBridge extends BridgeAbstract{
     }
 	public function getName(){
 		return (!empty($this->userName) ? $this->userName .' - ' : '') .'Whyd Bridge';
-	}
-
-	public function getCacheDuration(){
-		return 600; // 10 minutes
 	}
 }
 

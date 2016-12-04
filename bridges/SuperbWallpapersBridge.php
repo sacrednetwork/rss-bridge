@@ -4,6 +4,7 @@ class SuperbWallpapersBridge extends BridgeAbstract {
 	const MAINTAINER = "nel50n";
 	const NAME = "Superb Wallpapers Bridge";
 	const URI = "http://www.superbwallpapers.com/";
+	const CACHE_TIMEOUT = 43200; // 12h
 	const DESCRIPTION = "Returns the latests wallpapers from SuperbWallpapers";
 
     const PARAMETERS = array( array(
@@ -32,15 +33,15 @@ class SuperbWallpapersBridge extends BridgeAbstract {
 
         // Get last page number
         $link = self::URI.'/'.$category.'/9999.html';
-        $html = $this->getSimpleHTMLDOM($link)
-          or $this->returnServerError('Could not load '.$link);
+        $html = getSimpleHTMLDOM($link)
+          or returnServerError('Could not load '.$link);
 
         $lastpage = min($html->find('.paging .cpage', 0)->innertext(), ceil($max/36));
 
         for ($page = 1; $page <= $lastpage; $page++) {
             $link = self::URI.'/'.$category.'/'.$page.'.html';
-            $html = $this->getSimpleHTMLDOM($link)
-              or $this->returnServerError('No results for this query.');
+            $html = getSimpleHTMLDOM($link)
+              or returnServerError('No results for this query.');
 
             foreach($html->find('.wpl .i a') as $element) {
                 $thumbnail = $element->find('img', 0);
@@ -61,9 +62,5 @@ class SuperbWallpapersBridge extends BridgeAbstract {
 
     public function getName(){
         return self::NAME .'- '.$this->getInput('c').' ['.$this->getInput('r').']';
-    }
-
-    public function getCacheDuration(){
-        return 43200; // 12 hours
     }
 }

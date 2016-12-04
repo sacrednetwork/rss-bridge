@@ -11,13 +11,13 @@ class CommonDreamsBridge extends FeedExpander {
 	}
 
 	protected function parseItem($newsItem){
-		$item = $this->parseRSS_2_0_Item($newsItem);
+		$item = parent::parseItem($newsItem);
 		$item['content'] = $this->CommonDreamsExtractContent($item['uri']);
 		return $item;
 	}
 
 	private function CommonDreamsExtractContent($url) {
-		$html3 = $this->getSimpleHTMLDOMCached($url);
+		$html3 = getSimpleHTMLDOMCached($url);
 		$text = $html3->find('div[class=field--type-text-with-summary]', 0)->innertext;
 		$html3->clear();
 		unset ($html3);

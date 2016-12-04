@@ -4,6 +4,7 @@ class UnsplashBridge extends BridgeAbstract {
 	const MAINTAINER = "nel50n";
 	const NAME = "Unsplash Bridge";
 	const URI = "http://unsplash.com/";
+	const CACHE_TIMEOUT = 43200; // 12h
 	const DESCRIPTION = "Returns the latests photos from Unsplash";
 
     const PARAMETERS = array( array(
@@ -33,8 +34,8 @@ class UnsplashBridge extends BridgeAbstract {
 
         for ($page = 1; $page <= $lastpage; $page++) {
             $link = self::URI.'/grid?page='.$page;
-            $html = $this->getSimpleHTMLDOM($link)
-              or $this->returnServerError('No results for this query.');
+            $html = getSimpleHTMLDOM($link)
+              or returnServerError('No results for this query.');
 
             if ($page === 1) {
                 preg_match('/=(\d+)$/', $html->find('.pagination > a[!class]', -1)->href, $matches);
@@ -59,9 +60,5 @@ class UnsplashBridge extends BridgeAbstract {
                     break 2;
             }
         }
-    }
-
-    public function getCacheDuration(){
-        return 43200; // 12 hours
     }
 }

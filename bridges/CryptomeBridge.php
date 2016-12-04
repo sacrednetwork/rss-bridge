@@ -4,6 +4,7 @@ class CryptomeBridge extends BridgeAbstract{
     const MAINTAINER = "BoboTiG";
     const NAME = "Cryptome";
     const URI = "https://cryptome.org/";
+    const CACHE_TIMEOUT = 21600; //6h
     const DESCRIPTION = "Returns the N most recent documents.";
 
     const PARAMETERS = array( array(
@@ -16,8 +17,8 @@ class CryptomeBridge extends BridgeAbstract{
     ));
 
     public function collectData(){
-        $html = $this->getSimpleHTMLDOM(self::URI)
-            or $this->returnServerError('Could not request Cryptome.');
+        $html = getSimpleHTMLDOM(self::URI)
+            or returnServerError('Could not request Cryptome.');
         $number=$this->getInput('n');
         if (!empty($number)) {   /* number of documents */
             $num = min($number, 20);
@@ -34,9 +35,5 @@ class CryptomeBridge extends BridgeAbstract{
             }
             break;
         }
-    }
-
-    public function getCacheDuration(){
-        return 21600; // 6 hours
     }
 }

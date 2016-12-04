@@ -1,9 +1,10 @@
-    <?php
+<?php
     class Arte7Bridge extends BridgeAbstract{
 
         const MAINTAINER = "mitsukarenai";
         const NAME = "Arte +7";
         const URI = "http://www.arte.tv/";
+        const CACHE_TIMEOUT = 1800; // 30min
         const DESCRIPTION = "Returns newest videos from ARTE +7";
         const PARAMETERS = array(
             'Catégorie (Français)' => array(
@@ -57,17 +58,18 @@
       }
 
       $url = self::URI.'guide/'.$lang.'/plus7/'.$category;
-      $input = $this->getContents($url) or die('Could not request ARTE.');
+      $input = getContents($url) or die('Could not request ARTE.');
       if(strpos($input, 'categoryVideoSet') !== FALSE){
-        $input = explode('categoryVideoSet: ', $input);
-        $input = explode('}},', $input[1]);
+        $input = explode('categoryVideoSet="', $input);
+        $input = explode('}}', $input[1]);
         $input = $input[0].'}}';
       }else{
-        $input = explode('videoSet: ', $input);
-        $input = explode('}]},', $input[1]);
+        $input = explode('videoSet="', $input);
+        $input = explode('}]}', $input[1]);
         $input = $input[0].'}]}';
       }
-      $input_json = json_decode($input, TRUE);
+
+      $input_json = json_decode(html_entity_decode($input, ENT_QUOTES), TRUE);
 
       foreach($input_json['videos'] as $element) {
             $item = array();
@@ -86,7 +88,4 @@
         }
     }
 
-    public function getCacheDuration(){
-        return 1800; // 30 minutes
-    }
 }

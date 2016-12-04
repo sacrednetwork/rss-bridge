@@ -3,6 +3,7 @@ class CADBridge extends FeedExpander {
 	const MAINTAINER = "nyutag";
 	const NAME = "CAD Bridge";
 	const URI = "http://www.cad-comic.com/";
+	const CACHE_TIMEOUT = 7200; //2h
 	const DESCRIPTION = "Returns the newest articles.";
 
 	public function collectData(){
@@ -10,13 +11,13 @@ class CADBridge extends FeedExpander {
 	}
 
 	protected function parseItem($newsItem){
-		$item = $this->parseRSS_2_0_Item($newsItem);
+		$item = parent::parseItem($newsItem);
 		$item['content'] = $this->CADExtractContent($item['uri']);
 		return $item;
 	}
 
 	private function CADExtractContent($url) {
-		$html3 = $this->getSimpleHTMLDOMCached($url);
+		$html3 = getSimpleHTMLDOMCached($url);
 
 		// The request might fail due to missing https support or wrong URL
 		if($html3 == false)
@@ -40,10 +41,6 @@ class CADBridge extends FeedExpander {
 		if ($img == '')
 			return 'Daily comic not released yet';
 		return '<img src="'.$img.'"/>';
-	}
-
-	public function getCacheDuration(){
-		return 3600*2; // 2 hours
 	}
 }
 ?>

@@ -4,6 +4,7 @@ class WallpaperStopBridge extends BridgeAbstract {
 	const MAINTAINER = "nel50n";
 	const NAME = "WallpaperStop Bridge";
 	const URI = "http://www.wallpaperstop.com";
+	const CACHE_TIMEOUT = 43200; // 12h
 	const DESCRIPTION = "Returns the latests wallpapers from WallpaperStop";
 
     const PARAMETERS = array( array(
@@ -33,8 +34,8 @@ class WallpaperStopBridge extends BridgeAbstract {
 
        for ($page = 1; $page <= $lastpage; $page++) {
            $link = self::URI.'/'.$category.'-wallpaper/'.(!empty($subcategory)?$subcategory.'-wallpaper/':'').'desktop-wallpaper-'.$page.'.html';
-           $html = $this->getSimpleHTMLDOM($link)
-             or $this->returnServerError('No results for this query.');
+           $html = getSimpleHTMLDOM($link)
+             or returnServerError('No results for this query.');
 
            if ($page === 1) {
                preg_match('/-(\d+)\.html$/', $html->find('.pagination > .last', 0)->href, $matches);
@@ -65,9 +66,5 @@ class WallpaperStopBridge extends BridgeAbstract {
     public function getName(){
         $subcategory=$this->getInput('s');
         return 'WallpaperStop - '.$this->getInput('c').(!empty($subcategory) ? ' > '.$subcategory : '').' ['.$this->getInput('r').']';
-    }
-
-    public function getCacheDuration(){
-        return 43200; // 12 hours
     }
 }

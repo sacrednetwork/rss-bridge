@@ -4,6 +4,7 @@ class PickyWallpapersBridge extends BridgeAbstract {
 	const MAINTAINER = "nel50n";
 	const NAME = "PickyWallpapers Bridge";
 	const URI = "http://www.pickywallpapers.com/";
+	const CACHE_TIMEOUT = 43200; // 12h
 	const DESCRIPTION = "Returns the latests wallpapers from PickyWallpapers";
 
     const PARAMETERS = array( array(
@@ -33,8 +34,8 @@ class PickyWallpapersBridge extends BridgeAbstract {
         $resolution = $this->getInput('r');    // Wide wallpaper default
 
         for ($page = 1; $page <= $lastpage; $page++) {
-          $html = $this->getSimpleHTMLDOM($this->getURI().'/page-'.$page.'/')
-            or $this->returnServerError('No results for this query.');
+          $html = getSimpleHTMLDOM($this->getURI().'/page-'.$page.'/')
+            or returnServerError('No results for this query.');
 
             if ($page === 1) {
                 preg_match('/page-(\d+)\/$/', $html->find('.pages li a', -2)->href, $matches);
@@ -68,9 +69,5 @@ class PickyWallpapersBridge extends BridgeAbstract {
         return 'PickyWallpapers - '.$this->getInput('c')
           .($subcategory? ' > '.$subcategory : '')
           .' ['.$this->getInput('r').']';
-    }
-
-    public function getCacheDuration(){
-        return 43200; // 12 hours
     }
 }

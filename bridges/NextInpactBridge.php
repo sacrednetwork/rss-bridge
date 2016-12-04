@@ -11,13 +11,13 @@ class NextInpactBridge extends FeedExpander {
 	}
 
 	protected function parseItem($newsItem){
-		$item = $this->parseRSS_2_0_Item($newsItem);
+		$item = parent::parseItem($newsItem);
 		$item['content'] = $this->ExtractContent($item['uri']);
 		return $item;
 	}
 
 	private function ExtractContent($url) {
-		$html2 = $this->getSimpleHTMLDOMCached($url);
+		$html2 = getSimpleHTMLDOMCached($url);
 		$text = '<p><em>'.$html2->find('span.sub_title', 0)->innertext.'</em></p>'
 			.'<p><img src="'.$html2->find('div.container_main_image_article', 0)->find('img.dedicated',0)->src.'" alt="-" /></p>'
 			.'<div>'.$html2->find('div[itemprop=articleBody]', 0)->innertext.'</div>';

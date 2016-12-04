@@ -7,6 +7,7 @@ class GooglePlusPostBridge extends BridgeAbstract
 	const MAINTAINER = "Grummfy";
 	const NAME = "Google Plus Post Bridge";
 	const URI = "https://plus.google.com/";
+	const CACHE_TIMEOUT = 600; //10min
 	const DESCRIPTION = "Returns user public post (without API).";
 
     const PARAMETERS = array( array(
@@ -19,13 +20,13 @@ class GooglePlusPostBridge extends BridgeAbstract
 	public function collectData()
 	{
 		// get content parsed
-//		$html = $this->getSimpleHTMLDOM(__DIR__ . '/../posts2.html'
-		$html = $this->getSimpleHTMLDOM(self::URI . urlencode($this->getInput('username')) . '/posts'
+//		$html = getSimpleHTMLDOM(__DIR__ . '/../posts2.html'
+		$html = getSimpleHTMLDOM(self::URI . urlencode($this->getInput('username')) . '/posts'
 			// force language
 			, false, stream_context_create(array('http'=> array(
 			'header'    => 'Accept-Language: fr,fr-be,fr-fr;q=0.8,en;q=0.4,en-us;q=0.2;*' . "\r\n"
 			)))
-		) OR $this->returnServerError('No results for this query.');
+		) OR returnServerError('No results for this query.');
 
 		// get title, url, ... there is a lot of intresting stuff in meta
 		$this->_title = $html->find('meta[property]', 0)->getAttribute('content');
@@ -108,10 +109,5 @@ class GooglePlusPostBridge extends BridgeAbstract
 	public function getURI()
 	{
 		return $this->_url ?: self::URI;
-	}
-
-	public function getCacheDuration()
-	{
-		return 1; // 600; // 10 minutes
 	}
 }

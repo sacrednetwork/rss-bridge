@@ -4,6 +4,7 @@ class LinkedInCompanyBridge extends BridgeAbstract{
 	const MAINTAINER = "regisenguehard";
 	const NAME = "LinkedIn Company";
 	const URI = "https://www.linkedin.com/";
+	const CACHE_TIMEOUT = 21600; //6
 	const DESCRIPTION = "Returns most recent actus from Company on LinkedIn. (https://www.linkedin.com/company/<strong style=\"font-weight:bold;\">apple</strong>)";
 
     const PARAMETERS = array( array(
@@ -17,8 +18,8 @@ class LinkedInCompanyBridge extends BridgeAbstract{
         $html = '';
         $link = self::URI.'company/'.$this->getInput('c');
 
-        $html = $this->getSimpleHTMLDOM($link)
-            or $this->returnServerError('Could not request LinkedIn.');
+        $html = getSimpleHTMLDOM($link)
+            or returnServerError('Could not request LinkedIn.');
 
         foreach($html->find('//*[@id="my-feed-post"]/li') as $element) {
             $title = $element->find('span.share-body', 0)->innertext;
@@ -31,9 +32,5 @@ class LinkedInCompanyBridge extends BridgeAbstract{
                 $i++;
             }
         }
-    }
-
-    public function getCacheDuration(){
-        return 21600; // 6 hours
     }
 }

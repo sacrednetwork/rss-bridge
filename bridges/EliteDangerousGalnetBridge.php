@@ -4,12 +4,13 @@ class EliteDangerousGalnetBridge extends BridgeAbstract
 	const MAINTAINER = "corenting";
 	const NAME = "Elite: Dangerous Galnet";
 	const URI = "https://community.elitedangerous.com/galnet/";
+    const CACHE_TIMEOUT = 7200; // 2h
 	const DESCRIPTION = "Returns the latest page of news from Galnet";
 
 	public function collectData()
 	{
-        $html = $this->getSimpleHTMLDOM(self::URI)
-            or $this->returnServerError('Error while downloading the website content');
+        $html = getSimpleHTMLDOM(self::URI)
+            or returnServerError('Error while downloading the website content');
 		foreach($html->find('div.article') as $element) {
 			$item = array();
 
@@ -30,10 +31,5 @@ class EliteDangerousGalnetBridge extends BridgeAbstract
 
 			$this->items[] = $item;
 		}
-	}
-
-	public function getCacheDuration()
-	{
-		return 3600 * 2; // 2 hours
 	}
 }

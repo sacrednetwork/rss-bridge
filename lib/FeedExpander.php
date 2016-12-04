@@ -4,45 +4,50 @@ abstract class FeedExpander extends BridgeAbstract {
 
 	private $name;
 	private $uri;
-	private $description;
+	private $feedType;
 
 	public function collectExpandableDatas($url, $maxItems = -1){
 		if(empty($url)){
-			$this->returnServerError('There is no $url for this RSS expander');
+			returnServerError('There is no $url for this RSS expander');
 		}
 
-		$this->debugMessage('Loading from ' . $url);
+		debugMessage('Loading from ' . $url);
 
 		/* Notice we do not use cache here on purpose:
 		 * we want a fresh view of the RSS stream each time
 		 */
-		$content = $this->getContents($url)
-			or $this->returnServerError('Could not request ' . $url);
+		$content = getContents($url)
+			or returnServerError('Could not request ' . $url);
 		$rssContent = simplexml_load_string($content);
 
-		$this->debugMessage('Detecting feed format/version');
-		if(isset($rssContent->channel[0])){
-			$this->debugMessage('Detected RSS format');
-			if(isset($rssContent->item[0])){
-				$this->debugMessage('Detected RSS 1.0 format');
-				$this->collect_RSS_1_0_data($rssContent, $maxItems);
-			} else {
-				$this->debugMessage('Detected RSS 0.9x or 2.0 format');
-				$this->collect_RSS_2_0_data($rssContent, $maxItems);
-			}
-		} elseif(isset($rssContent->entry[0])){
-			$this->debugMessage('Detected ATOM format');
-			$this->collect_ATOM_data($rssContent, $maxItems);
-		} else {
-			$this->debugMessage('Unknown feed format/version');
-			$this->returnServerError('The feed format is unknown!');
+		debugMessage('Detecting feed format/version');
+		switch(true){
+		case isset($rssContent->item[0]):
+			debugMessage('Detected RSS 1.0 format');
+			$this->feedType = "RSS_1_0";
+			break;
+		case isset($rssContent->channel[0]):
+			debugMessage('Detected RSS 0.9x or 2.0 format');
+			$this->feedType = "RSS_2_0";
+			break;
+		case isset($rssContent->entry[0]):
+			debugMessage('Detected ATOM format');
+			$this->feedType = "ATOM_1_0";
+			break;
+		default:
+			debugMessage('Unknown feed format/version');
+			returnServerError('The feed format is unknown!');
+			break;
 		}
+
+		debugMessage('Calling function "collect_' . $this->feedType . '_data"');
+		$this->{'collect_' . $this->feedType . '_data'}($rssContent, $maxItems);
 	}
 
 	protected function collect_RSS_1_0_data($rssContent, $maxItems){
 		$this->load_RSS_2_0_feed_data($rssContent->channel[0]);
 		foreach($rssContent->item as $item){
-			$this->debugMessage('parsing item ' . var_export($item, true));
+			debugMessage('parsing item ' . var_export($item, true));
 			$this->items[] = $this->parseItem($item);
 			if($maxItems !== -1 && count($this->items) >= $maxItems) break;
 		}
@@ -50,22 +55,22 @@ abstract class FeedExpander extends BridgeAbstract {
 
 	protected function collect_RSS_2_0_data($rssContent, $maxItems){
 		$rssContent = $rssContent->channel[0];
-		$this->debugMessage('RSS content is ===========\n'
+		debugMessage('RSS content is ===========\n'
 		. var_export($rssContent, true)
 		. '===========');
 
 		$this->load_RSS_2_0_feed_data($rssContent);
 		foreach($rssContent->item as $item){
-			$this->debugMessage('parsing item ' . var_export($item, true));
+			debugMessage('parsing item ' . var_export($item, true));
 			$this->items[] = $this->parseItem($item);
 			if($maxItems !== -1 && count($this->items) >= $maxItems) break;
 		}
 	}
 
-	protected function collect_ATOM_data($content, $maxItems){
+	protected function collect_ATOM_1_0_data($content, $maxItems){
 		$this->load_ATOM_feed_data($content);
 		foreach($content->entry as $item){
-			$this->debugMessage('parsing item ' . var_export($item, true));
+			debugMessage('parsing item ' . var_export($item, true));
 			$this->items[] = $this->parseItem($item);
 			if($maxItems !== -1 && count($this->items) >= $maxItems) break;
 		}
@@ -79,7 +84,6 @@ abstract class FeedExpander extends BridgeAbstract {
 	protected function load_RSS_2_0_feed_data($rssContent){
 		$this->name = trim($rssContent->title);
 		$this->uri = trim($rssContent->link);
-		$this->description = trim($rssContent->description);
 	}
 
 	protected function load_ATOM_feed_data($content){
@@ -99,28 +103,25 @@ abstract class FeedExpander extends BridgeAbstract {
 				}
 			}
 		}
-
-		if(isset($content->subtitle))
-			$this->description = $content->subtitle;
 	}
 
 	protected function parseATOMItem($feedItem){
 		$item = array();
-		if(isset($feedItem->id)) $item['uri'] = $feedItem->id;
-		if(isset($feedItem->title)) $item['title'] = $feedItem->title;
-		if(isset($feedItem->updated)) $item['timestamp'] = strtotime($feedItem->updated);
-		if(isset($feedItem->author)) $item['author'] = $feedItem->author->name;
-		if(isset($feedItem->content)) $item['content'] = $feedItem->content;
+		if(isset($feedItem->id)) $item['uri'] = (string)$feedItem->id;
+		if(isset($feedItem->title)) $item['title'] = (string)$feedItem->title;
+		if(isset($feedItem->updated)) $item['timestamp'] = strtotime((string)$feedItem->updated);
+		if(isset($feedItem->author)) $item['author'] = (string)$feedItem->author->name;
+		if(isset($feedItem->content)) $item['content'] = (string)$feedItem->content;
 		return $item;
 	}
 
 	protected function parseRSS_0_9_1_Item($feedItem){
 		$item = array();
-		if(isset($feedItem->link)) $item['uri'] = $feedItem->link;
-		if(isset($feedItem->title)) $item['title'] = $feedItem->title;
+		if(isset($feedItem->link)) $item['uri'] = (string)$feedItem->link;
+		if(isset($feedItem->title)) $item['title'] = (string)$feedItem->title;
 		// rss 0.91 doesn't support timestamps
 		// rss 0.91 doesn't support authors
-		if(isset($feedItem->description)) $item['content'] = $feedItem->description;
+		if(isset($feedItem->description)) $item['content'] = (string)$feedItem->description;
 		return $item;
 	}
 
@@ -131,8 +132,8 @@ abstract class FeedExpander extends BridgeAbstract {
 		$namespaces = $feedItem->getNamespaces(true);
 		if(isset($namespaces['dc'])){
 			$dc = $feedItem->children($namespaces['dc']);
-			if(isset($dc->date)) $item['timestamp'] = strtotime($dc->date);
-			if(isset($dc->creator)) $item['author'] = $dc->creator;
+			if(isset($dc->date)) $item['timestamp'] = strtotime((string)$dc->date);
+			if(isset($dc->creator)) $item['author'] = (string)$dc->creator;
 		}
 
 		return $item;
@@ -145,15 +146,25 @@ abstract class FeedExpander extends BridgeAbstract {
 		$namespaces = $feedItem->getNamespaces(true);
 		if(isset($namespaces['dc'])) $dc = $feedItem->children($namespaces['dc']);
 
+		if(isset($feedItem->guid)){
+			foreach($feedItem->guid->attributes() as $attribute => $value){
+				if($attribute === 'isPermaLink'
+				&& ($value === 'true' || filter_var($feedItem->guid,FILTER_VALIDATE_URL))){
+					$item['uri'] = (string)$feedItem->guid;
+					break;
+				}
+			}
+		}
+
 		if(isset($feedItem->pubDate)){
-			$item['timestamp'] = strtotime($feedItem->pubDate);
+			$item['timestamp'] = strtotime((string)$feedItem->pubDate);
 		} elseif(isset($dc->date)){
-			$item['timestamp'] = strtotime($dc->date);
+			$item['timestamp'] = strtotime((string)$dc->date);
 		}
 		if(isset($feedItem->author)){
-			$item['author'] = $feedItem->author;
+			$item['author'] = (string)$feedItem->author;
 		} elseif(isset($dc->creator)){
-			$item['author'] = $dc->creator;
+			$item['author'] = (string)$dc->creator;
 		}
 		return $item;
 	}
@@ -163,7 +174,20 @@ abstract class FeedExpander extends BridgeAbstract {
 	 * @param $item the input rss item
 	 * @return a RSS-Bridge Item, with (hopefully) the whole content)
 	 */
-	abstract protected function parseItem($item);
+	protected function parseItem($item){
+		switch($this->feedType){
+		case 'RSS_1_0':
+			return $this->parseRSS_1_0_Item($item);
+			break;
+		case 'RSS_2_0':
+			return $this->parseRSS_2_0_Item($item);
+			break;
+		case 'ATOM_1_0':
+			return $this->parseATOMItem($item);
+			break;
+		default: returnClientError('Unknown version ' . $this->getInput('version') . '!');
+		}
+	}
 
 	public function getURI(){
 		return $this->uri;
@@ -171,9 +195,5 @@ abstract class FeedExpander extends BridgeAbstract {
 
 	public function getName(){
 		return $this->name;
-	}
-
-	public function getDescription(){
-		return $this->description;
 	}
 }

@@ -4,6 +4,7 @@ class CNETBridge extends BridgeAbstract {
     const MAINTAINER = 'ORelio';
     const NAME = 'CNET News';
     const URI = 'http://www.cnet.com/';
+    const CACHE_TIMEOUT = 1800; // 30min
     const DESCRIPTION = 'Returns the newest articles. <br /> You may specify a topic found in some section URLs, else all topics are selected.';
 
     const PARAMETERS = array( array(
@@ -38,7 +39,7 @@ class CNETBridge extends BridgeAbstract {
         }
 
         $pageUrl = self::URI.(empty($this->getInput('topic')) ? '' : 'topics/'.$this->getInput('topic').'/');
-        $html = $this->getSimpleHTMLDOM($pageUrl) or $this->returnServerError('Could not request CNET: '.$pageUrl);
+        $html = getSimpleHTMLDOM($pageUrl) or returnServerError('Could not request CNET: '.$pageUrl);
         $limit = 0;
 
         foreach($html->find('div.assetBody') as $element) {
@@ -51,7 +52,7 @@ class CNETBridge extends BridgeAbstract {
 
                 if (!empty($article_title) && !empty($article_uri) && strpos($article_uri, '/news/') !== false) {
 
-                    $article_html = $this->getSimpleHTMLDOM($article_uri) or $this->returnServerError('Could not request CNET: '.$article_uri);
+                    $article_html = getSimpleHTMLDOM($article_uri) or returnServerError('Could not request CNET: '.$article_uri);
 
                     $article_content = trim(CleanArticle(ExtractFromDelimiters($article_html, '<div class="articleContent', '<footer>')));
 
@@ -71,9 +72,5 @@ class CNETBridge extends BridgeAbstract {
     public function getName() {
         $topic=$this->getInput('topic');
         return 'CNET News Bridge'.(empty($topic) ? '' : ' - '.$topic);
-    }
-
-    public function getCacheDuration() {
-        return 1800; // 30 minutes
     }
 }

@@ -4,6 +4,7 @@ class CpasbienBridge extends BridgeAbstract {
     const MAINTAINER = "lagaisse";
     const NAME = "Cpasbien Bridge";
     const URI = "http://www.cpasbien.io";
+    const CACHE_TIMEOUT = 86400; // 24h
     const DESCRIPTION = "Returns latest torrents from a request query";
 
     const PARAMETERS = array( array(
@@ -16,14 +17,14 @@ class CpasbienBridge extends BridgeAbstract {
 
     public function collectData(){
         $request = str_replace(" ","-",trim($this->getInput('q')));
-        $html = $this->getSimpleHTMLDOM(self::URI.'/recherche/'.urlencode($request).'.html')
-            or $this->returnServerError('No results for this query.');
+        $html = getSimpleHTMLDOM(self::URI.'/recherche/'.urlencode($request).'.html')
+            or returnServerError('No results for this query.');
 
         foreach ($html->find('#gauche',0)->find('div') as $episode) {
             if ($episode->getAttribute('class')=='ligne0' ||
                 $episode->getAttribute('class')=='ligne1')
             {
-                $htmlepisode=$this->getSimpleHTMLDOMCached($episode->find('a', 0)->getAttribute('href'));
+                $htmlepisode=getSimpleHTMLDOMCached($episode->find('a', 0)->getAttribute('href'));
 
                 $item = array();
                 $item['author'] = $episode->find('a', 0)->text();
@@ -48,9 +49,5 @@ class CpasbienBridge extends BridgeAbstract {
 
     public function getName(){
         return $this->getInput('q').' : '.self::NAME;
-    }
-
-    public function getCacheDuration(){
-        return 60*60*24; // 24 hours
     }
 }

@@ -4,12 +4,13 @@ class BlaguesDeMerdeBridge extends BridgeAbstract{
     const MAINTAINER = "superbaillot.net";
     const NAME = "Blagues De Merde";
     const URI = "http://www.blaguesdemerde.fr/";
+    const CACHE_TIMEOUT = 7200; // 2h
     const DESCRIPTION = "Blagues De Merde";
 
 
     public function collectData(){
-        $html = $this->getSimpleHTMLDOM(self::URI)
-            or $this->returnServerError('Could not request BDM.');
+        $html = getSimpleHTMLDOM(self::URI)
+            or returnServerError('Could not request BDM.');
 
         foreach($html->find('article.joke_contener') as $element) {
             $item = array();
@@ -27,10 +28,6 @@ class BlaguesDeMerdeBridge extends BridgeAbstract{
                 $this->items[] = $item;
             }
         }
-    }
-
-    public function getCacheDuration(){
-        return 7200; // 2h hours
     }
 }
 ?>

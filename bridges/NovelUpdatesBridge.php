@@ -4,6 +4,7 @@ class NovelUpdatesBridge extends BridgeAbstract{
 	const MAINTAINER = "albirew";
 	const NAME = "Novel Updates";
 	const URI = "http://www.novelupdates.com/";
+	const CACHE_TIMEOUT = 21600; // 6h
 	const DESCRIPTION = "Returns releases from Novel Updates";
 	const PARAMETERS = array( array(
         'n'=>array(
@@ -20,8 +21,8 @@ class NovelUpdatesBridge extends BridgeAbstract{
     }
 
     public function collectData(){
-        $fullhtml = $this->getSimpleHTMLDOM($this->getURI())
-          or $this->returnServerError('Could not request NovelUpdates, novel "'.$this->getInput('n').'" not found');
+        $fullhtml = getSimpleHTMLDOM($this->getURI())
+          or returnServerError('Could not request NovelUpdates, novel "'.$this->getInput('n').'" not found');
 
         $this->seriesTitle = $fullhtml->find('h4.seriestitle', 0)->plaintext;
         // dirty fix for nasty simpledom bug: https://github.com/sebsauvage/rss-bridge/issues/259
@@ -47,9 +48,5 @@ class NovelUpdatesBridge extends BridgeAbstract{
 
     public function getName(){
         return $this->seriesTitle. ' - ' . static::NAME;
-    }
-
-    public function getCacheDuration(){
-        return 21600; // 6 hours
     }
 }

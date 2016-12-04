@@ -2,6 +2,7 @@
 class RTBFBridge extends BridgeAbstract {
 	const NAME = "RTBF Bridge";
 	const URI = "http://www.rtbf.be/auvio/emissions/";
+	const CACHE_TIMEOUT = 21600; //6h
 	const DESCRIPTION = "Returns the newest RTBF videos by series ID";
 	const MAINTAINER = "Frenzie";
 
@@ -18,8 +19,8 @@ class RTBFBridge extends BridgeAbstract {
 		$limit = 10;
 		$count = 0;
 
-        $html = $this->getSimpleHTMLDOM($this->getURI())
-          or $this->returnServerError('Could not request RTBF.');
+        $html = getSimpleHTMLDOM($this->getURI())
+          or returnServerError('Could not request RTBF.');
 
 		foreach($html->find('section[id!=widget-ml-avoiraussi-] .rtbf-media-grid article') as $element) {
 			if($count >= $limit) {
@@ -45,9 +46,5 @@ class RTBFBridge extends BridgeAbstract {
 
 	public function getName(){
 		return $this->getInput('c') .' - RTBF Bridge';
-	}
-
-	public function getCacheDuration(){
-		return 21600; // 6 hours
 	}
 }

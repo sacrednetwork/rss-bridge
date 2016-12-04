@@ -4,6 +4,7 @@ class DeveloppezDotComBridge extends FeedExpander {
 	const MAINTAINER = "polopollo";
 	const NAME = "Developpez.com Actus (FR)";
 	const URI = "http://www.developpez.com/";
+	const CACHE_TIMEOUT = 1800; // 30min
 	const DESCRIPTION = "Returns the 15 newest posts from DeveloppezDotCom (full text).";
 
 	public function collectData(){
@@ -11,7 +12,7 @@ class DeveloppezDotComBridge extends FeedExpander {
 	}
 
 	protected function parseItem($newsItem){
-		$item = $this->parseRSS_2_0_Item($newsItem);
+		$item = parent::parseItem($newsItem);
 		$item['content'] = $this->DeveloppezDotComExtractContent($item['uri']);
 		return $item;
 	}
@@ -42,13 +43,9 @@ class DeveloppezDotComBridge extends FeedExpander {
 	}
 
 	private function DeveloppezDotComExtractContent($url) {
-		$articleHTMLContent = $this->getSimpleHTMLDOMCached($url);
+		$articleHTMLContent = getSimpleHTMLDOMCached($url);
 		$text = $this->convert_smart_quotes($articleHTMLContent->find('div.content', 0)->innertext);
 		$text = utf8_encode($text);
 		return trim($text);
-	}
-
-	public function getCacheDuration(){
-		return 1800; // 30min
 	}
 }

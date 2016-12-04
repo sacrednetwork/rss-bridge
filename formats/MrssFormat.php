@@ -30,6 +30,26 @@ class MrssFormat extends FormatAbstract {
 			$itemUri = isset($item['uri']) ? $this->xml_encode($item['uri']) : '';
 			$itemTimestamp = isset($item['timestamp']) ? $this->xml_encode(date(DATE_RFC2822, $item['timestamp'])) : '';
 			$itemContent = isset($item['content']) ? $this->xml_encode($this->sanitizeHtml($item['content'])) : '';
+
+			$entryEnclosuresWarning = '';
+			$entryEnclosures = '';
+			if(isset($item['enclosures'])){
+				$entryEnclosures .= '<enclosure url="'
+				. $this->xml_encode($item['enclosures'][0])
+				. '"/>';
+
+				if(count($item['enclosures']) > 1){
+					$entryEnclosures .= PHP_EOL;
+					$entryEnclosuresWarning = '&lt;br&gt;Warning:
+Some media files might not be shown to you. Consider using the ATOM format instead!';
+					foreach($item['enclosures'] as $enclosure){
+						$entryEnclosures .= '<atom:link rel="enclosure" href="'
+						. $enclosure . '" />'
+						. PHP_EOL;
+					}
+				}
+			}
+
 			$items .= <<<EOD
 
 	<item>
@@ -37,19 +57,22 @@ class MrssFormat extends FormatAbstract {
 		<link>{$itemUri}</link>
 		<guid isPermaLink="true">{$itemUri}</guid>
 		<pubDate>{$itemTimestamp}</pubDate>
-		<description>{$itemContent}</description>
+		<description>{$itemContent}{$entryEnclosuresWarning}</description>
 		<author>{$itemAuthor}</author>
+		{$entryEnclosures}
 	</item>
 
 EOD;
 		}
 
+		$charset = $this->getCharset();
+
 		/* Data are prepared, now let's begin the "MAGIE !!!" */
-		$toReturn  = '<?xml version="1.0" encoding="UTF-8"?>';
-		$toReturn .= <<<EOD
-<rss version="2.0" 
-xmlns:dc="http://purl.org/dc/elements/1.1/" 
-xmlns:media="http://search.yahoo.com/mrss/" 
+		$toReturn = <<<EOD
+<?xml version="1.0" encoding="{$charset}"?>
+<rss version="2.0"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:media="http://search.yahoo.com/mrss/"
 xmlns:atom="http://www.w3.org/2005/Atom">
 	<channel>
 		<title>{$title}</title>
@@ -65,13 +88,13 @@ EOD;
 
 		// Remove invalid non-UTF8 characters
 		ini_set('mbstring.substitute_character', 'none');
-		$toReturn = mb_convert_encoding($toReturn, 'UTF-8', 'UTF-8');
+		$toReturn = mb_convert_encoding($toReturn, $this->getCharset(), 'UTF-8');
 		return $toReturn;
 	}
 
 	public function display(){
 		$this
-			->setContentType('application/rss+xml; charset=UTF-8')
+			->setContentType('application/rss+xml; charset=' . $this->getCharset())
 			->callContentType();
 
 		return parent::display();

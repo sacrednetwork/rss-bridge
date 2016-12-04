@@ -12,6 +12,7 @@ class GoogleSearchBridge extends BridgeAbstract{
 	const MAINTAINER = "sebsauvage";
 	const NAME = "Google search";
 	const URI = "https://www.google.com/";
+	const CACHE_TIMEOUT = 1800; // 30min
 	const DESCRIPTION = "Returns most recent results from Google search.";
 
     const PARAMETERS = array( array(
@@ -25,10 +26,10 @@ class GoogleSearchBridge extends BridgeAbstract{
     public function collectData(){
         $html = '';
 
-        $html = $this->getSimpleHTMLDOM(self::URI
+        $html = getSimpleHTMLDOM(self::URI
           .'search?q=' . urlencode($this->getInput('q'))
           .'&num=100&complete=0&tbs=qdr:y,sbd:1')
-          or $this->returnServerError('No results for this query.');
+          or returnServerError('No results for this query.');
 
         $emIsRes = $html->find('div[id=ires]',0);
         if( !is_null($emIsRes) ){
@@ -49,9 +50,5 @@ class GoogleSearchBridge extends BridgeAbstract{
 
     public function getName(){
         return $this->getInput('q') .' - Google search';
-    }
-
-    public function getCacheDuration(){
-        return 1800; // 30 minutes
     }
 }

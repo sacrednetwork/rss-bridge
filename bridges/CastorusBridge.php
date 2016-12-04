@@ -3,6 +3,7 @@ class CastorusBridge extends BridgeAbstract {
 	const MAINTAINER = "logmanoriginal";
 	const NAME = "Castorus Bridge";
 	const URI = 'http://www.castorus.com';
+	const CACHE_TIMEOUT = 600; // 10min
 	const DESCRIPTION = "Returns the latest changes";
 
     const PARAMETERS = array(
@@ -32,7 +33,7 @@ class CastorusBridge extends BridgeAbstract {
 		$title = $activity->find('a', 0);
 
 		if(!$title)
-			$this->returnServerError('Cannot find title!');
+			returnServerError('Cannot find title!');
 
 		return htmlspecialchars(trim($title->plaintext));
 	}
@@ -42,7 +43,7 @@ class CastorusBridge extends BridgeAbstract {
 		$url = $activity->find('a', 0);
 
 		if(!$url)
-			$this->returnServerError('Cannot find url!');
+			returnServerError('Cannot find url!');
 
 		return self::URI . $url->href;
 	}
@@ -54,7 +55,7 @@ class CastorusBridge extends BridgeAbstract {
 		$nodes = $activity->find('*');
 
 		if(!$nodes)
-			$this->returnServerError('Cannot find nodes!');
+			returnServerError('Cannot find nodes!');
 
 		foreach($nodes as $node){
 			$node->outertext = '';
@@ -68,7 +69,7 @@ class CastorusBridge extends BridgeAbstract {
 		$price = $activity->find('span', 1);
 
 		if(!$price)
-			$this->returnServerError('Cannot find price!');
+			returnServerError('Cannot find price!');
 
 		return $price->innertext;
 	}
@@ -77,15 +78,15 @@ class CastorusBridge extends BridgeAbstract {
         $zip_filter = trim($this->getInput('zip'));
         $city_filter = trim($this->getInput('city'));
 
-		$html = $this->getSimpleHTMLDOM(self::URI);
+		$html = getSimpleHTMLDOM(self::URI);
 
 		if(!$html)
-			$this->returnServerError('Could not load data from ' . self::URI . '!');
+			returnServerError('Could not load data from ' . self::URI . '!');
 
 		$activities = $html->find('div#activite/li');
 
 		if(!$activities)
-			$this->returnServerError('Failed to find activities!');
+			returnServerError('Failed to find activities!');
 
 		foreach($activities as $activity){
 			$item = array();
@@ -106,9 +107,5 @@ class CastorusBridge extends BridgeAbstract {
 
 			$this->items[] = $item;
 		}
-	}
-
-	public function getCacheDuration(){
-		return 600; // 10 minutes
 	}
 }

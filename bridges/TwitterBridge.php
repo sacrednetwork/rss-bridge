@@ -2,6 +2,7 @@
 class TwitterBridge extends BridgeAbstract{
     const NAME='Twitter Bridge';
     const URI='https://twitter.com/';
+    const CACHE_TIMEOUT = 300; // 5min
     const DESCRIPTION='returns tweets';
     const PARAMETERS=array(
         'global'=>array(
@@ -61,13 +62,13 @@ class TwitterBridge extends BridgeAbstract{
 	public function collectData(){
 		$html = '';
 
-		$html = $this->getSimpleHTMLDOM($this->getURI());
+		$html = getSimpleHTMLDOM($this->getURI());
 		if(!$html){
 			switch($this->queriedContext){
 			case 'By keyword or hashtag':
-				$this->returnServerError('No results for this query.');
+				returnServerError('No results for this query.');
 			case 'By username':
-				$this->returnServerError('Requested username can\'t be found.');
+				returnServerError('Requested username can\'t be found.');
 			}
 		}
 
@@ -134,9 +135,5 @@ EOD;
 			// put out
 			$this->items[] = $item;
 		}
-	}
-
-	public function getCacheDuration(){
-		return 300; // 5 minutes
 	}
 }

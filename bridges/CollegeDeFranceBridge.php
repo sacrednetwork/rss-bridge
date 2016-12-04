@@ -4,6 +4,7 @@ class CollegeDeFranceBridge extends BridgeAbstract{
 	const MAINTAINER = "pit-fgfjiudghdf";
 	const NAME = "CollegeDeFrance";
 	const URI = "http://www.college-de-france.fr/";
+	const CACHE_TIMEOUT = 10800; // 3h
 	const DESCRIPTION = "Returns the latest audio and video from CollegeDeFrance";
 
 	public function collectData(){
@@ -30,8 +31,8 @@ class CollegeDeFranceBridge extends BridgeAbstract{
 		 * 	</a>
 		 * </li>
 		 */
-        $html = $this->getSimpleHTMLDOM(self::URI.'components/search-audiovideo.jsp?fulltext=&siteid=1156951719600&lang=FR&type=all')
-            or $this->returnServerError('Could not request CollegeDeFrance.');
+        $html = getSimpleHTMLDOM(self::URI.'components/search-audiovideo.jsp?fulltext=&siteid=1156951719600&lang=FR&type=all')
+            or returnServerError('Could not request CollegeDeFrance.');
 		foreach($html->find('a[data-target]') as $element) {
 			$item = array();
 			$item['title'] = $element->find('.title', 0)->plaintext;
@@ -65,9 +66,5 @@ class CollegeDeFranceBridge extends BridgeAbstract{
 			$item['uri'] = self::URI . $element->href;
 			$this->items[] = $item;
 		}
-	}
-
-	public function getCacheDuration(){
-		return 3600*3; // 3 hours
 	}
 }

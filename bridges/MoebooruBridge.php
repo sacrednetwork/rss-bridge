@@ -3,6 +3,7 @@ class MoebooruBridge extends BridgeAbstract{
 
   const NAME = "Moebooru";
   const URI = "https://moe.dev.myconan.net/";
+  const CACHE_TIMEOUT = 1800; // 30min
   const DESCRIPTION = "Returns images from given page";
 
   const PARAMETERS = array( array(
@@ -21,8 +22,8 @@ class MoebooruBridge extends BridgeAbstract{
   }
 
   public function collectData(){
-    $html = $this->getSimpleHTMLDOM($this->getFullURI())
-      or $this->returnServerError('Could not request '.$this->getName());
+    $html = getSimpleHTMLDOM($this->getFullURI())
+      or returnServerError('Could not request '.$this->getName());
 
 
     $input_json = explode('Post.register(', $html);
@@ -41,9 +42,5 @@ class MoebooruBridge extends BridgeAbstract{
       $item['content'] = '<a href="' . $item['imageUri'] . '"><img src="' . $json['preview_url'] . '" /></a><br>Tags: '.$json['tags'];
       $this->items[] = $item;
     }
-  }
-
-  public function getCacheDuration(){
-    return 1800; // 30 minutes
   }
 }

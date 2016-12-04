@@ -4,12 +4,13 @@ class ScmbBridge extends BridgeAbstract{
 	const MAINTAINER = "Astalaseven";
 	const NAME = "Se Coucher Moins Bête Bridge";
 	const URI = "http://secouchermoinsbete.fr/";
+	const CACHE_TIMEOUT = 21600; // 6h
 	const DESCRIPTION = "Returns the newest anecdotes.";
 
     public function collectData(){
         $html = '';
-        $html = $this->getSimpleHTMLDOM(self::URI)
-          or $this->returnServerError('Could not request Se Coucher Moins Bete.');
+        $html = getSimpleHTMLDOM(self::URI)
+          or returnServerError('Could not request Se Coucher Moins Bete.');
 
         foreach($html->find('article') as $article) {
         	$item = array();
@@ -32,9 +33,5 @@ class ScmbBridge extends BridgeAbstract{
 			$item['content'] = $content;
 			$this->items[] = $item;
 		}
-    }
-
-    public function getCacheDuration(){
-        return 21600; // 6 hours
     }
 }

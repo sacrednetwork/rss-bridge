@@ -4,6 +4,7 @@ class LeMondeInformatiqueBridge extends FeedExpander {
     const MAINTAINER = "ORelio";
     const NAME = "Le Monde Informatique";
     const URI = "http://www.lemondeinformatique.fr/";
+    const CACHE_TIMEOUT = 1800; // 30min
     const DESCRIPTION = "Returns the newest articles.";
 
     public function collectData(){
@@ -11,9 +12,9 @@ class LeMondeInformatiqueBridge extends FeedExpander {
     }
 
     protected function parseItem($newsItem){
-        $item = $this->parseRSS_1_0_Item($newsItem);
-        $article_html = $this->getSimpleHTMLDOMCached($item['uri']) 
-            or $this->returnServerError('Could not request LeMondeInformatique: ' . $item['uri']);
+        $item = parent::parseItem($newsItem);
+        $article_html = getSimpleHTMLDOMCached($item['uri'])
+            or returnServerError('Could not request LeMondeInformatique: ' . $item['uri']);
         $item['content'] = $this->CleanArticle($article_html->find('div#article', 0)->innertext);
         $item['title'] = $article_html->find('h1.cleanprint-title', 0)->plaintext;
         return $item;
@@ -37,9 +38,5 @@ class LeMondeInformatiqueBridge extends FeedExpander {
         $article_html = $this->StripWithDelimiters($article_html, '<script', '</script>');
         $article_html = $this->StripWithDelimiters($article_html, '<h1 class="cleanprint-title"', '</h1>');
         return $article_html;
-    }
-
-    public function getCacheDuration() {
-        return 1800; // 30 minutes
     }
 }

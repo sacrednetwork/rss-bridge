@@ -4,6 +4,7 @@ class ParuVenduImmoBridge extends BridgeAbstract
 	const MAINTAINER = "polo2ro";
 	const NAME = "Paru Vendu Immobilier";
 	const URI = "http://www.paruvendu.fr";
+	const CACHE_TIMEOUT = 10800; // 3h
 	const DESCRIPTION = "Returns the ads from the first page of search result.";
 
 
@@ -25,8 +26,8 @@ class ParuVenduImmoBridge extends BridgeAbstract
 
     public function collectData()
     {
-        $html = $this->getSimpleHTMLDOM($this->getURI())
-          or $this->returnServerError('Could not request paruvendu.');
+        $html = getSimpleHTMLDOM($this->getURI())
+          or returnServerError('Could not request paruvendu.');
 
         foreach($html->find('div.annonce a') as $element) {
 
@@ -91,9 +92,5 @@ class ParuVenduImmoBridge extends BridgeAbstract
             $request .= ' In: '.$location;
         }
         return 'Paru Vendu Immobilier'.$request;
-    }
-
-    public function getCacheDuration(){
-        return 10800; // 3 hours
     }
 }

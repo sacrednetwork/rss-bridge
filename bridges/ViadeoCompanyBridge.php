@@ -4,6 +4,7 @@ class ViadeoCompanyBridge extends BridgeAbstract{
 	const MAINTAINER = "regisenguehard";
 	const NAME = "Viadeo Company";
 	const URI = "https://www.viadeo.com/";
+	const CACHE_TIMEOUT = 21600; // 6h
 	const DESCRIPTION = "Returns most recent actus from Company on Viadeo. (http://www.viadeo.com/fr/company/<strong style=\"font-weight:bold;\">apple</strong>)";
 
     const PARAMETERS = array( array(
@@ -17,8 +18,8 @@ class ViadeoCompanyBridge extends BridgeAbstract{
         $html = '';
         $link = self::URI.'fr/company/'.$this->getInput('c');
 
-        $html = $this->getSimpleHTMLDOM($link)
-          or $this->returnServerError('Could not request Viadeo.');
+        $html = getSimpleHTMLDOM($link)
+          or returnServerError('Could not request Viadeo.');
 
         foreach($html->find('//*[@id="company-newsfeed"]/ul/li') as $element) {
             $title = $element->find('p', 0)->innertext;
@@ -31,9 +32,5 @@ class ViadeoCompanyBridge extends BridgeAbstract{
                 $i++;
             }
         }
-    }
-
-    public function getCacheDuration(){
-        return 21600; // 6 hours
     }
 }

@@ -4,6 +4,7 @@ class DauphineLibereBridge extends FeedExpander {
     const MAINTAINER = "qwertygc";
     const NAME = "Dauphine Bridge";
     const URI = "http://www.ledauphine.com/";
+    const CACHE_TIMEOUT = 7200; // 2h
     const DESCRIPTION = "Returns the newest articles.";
 
     const PARAMETERS = array( array(
@@ -41,20 +42,16 @@ class DauphineLibereBridge extends FeedExpander {
     }
 
     protected function parseItem($newsItem){
-        $item = $this->parseRSS_2_0_Item($newsItem);
+        $item = parent::parseItem($newsItem);
         $item['content'] = $this->ExtractContent($item['uri']);
         return $item;
     }
 
     private function ExtractContent($url) {
-        $html2 = $this->getSimpleHTMLDOMCached($url);
+        $html2 = getSimpleHTMLDOMCached($url);
         $text = $html2->find('div.column', 0)->innertext;
         $text = preg_replace('@<script[^>]*?>.*?</script>@si', '', $text);
         return $text;
-    }
-
-    public function getCacheDuration(){
-        return 3600*2; // 2 hours
     }
 }
 ?>

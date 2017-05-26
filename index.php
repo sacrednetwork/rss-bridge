@@ -69,9 +69,12 @@ if(ini_get('allow_url_fopen') !== "1")
 	die('"allow_url_fopen" is not set to "1". Please check "php.ini');
 
 // FIXME : beta test UA spoofing, please report any blacklisting by PHP-fopen-unfriendly websites
-ini_set('user_agent', 'Mozilla/5.0(X11; Linux x86_64; rv:30.0)
- Gecko/20121202 Firefox/30.0(rss-bridge/0.1;
- +https://github.com/RSS-Bridge/rss-bridge)');
+
+$userAgent = 'Mozilla/5.0(X11; Linux x86_64; rv:30.0)';
+$userAgent .= ' Gecko/20121202 Firefox/30.0(rss-bridge/0.1;';
+$userAgent .= '+https://github.com/RSS-Bridge/rss-bridge)';
+
+ini_set('user_agent', $userAgent);
 
 // default whitelist
 $whitelist_file = './whitelist.txt';
@@ -93,19 +96,25 @@ $whitelist_default = array(
 	"WikipediaBridge",
 	"YoutubeBridge");
 
-if(!file_exists($whitelist_file)){
-	$whitelist_selection = $whitelist_default;
-	$whitelist_write = implode("\n", $whitelist_default);
-	file_put_contents($whitelist_file, $whitelist_write);
-} else {
-	$whitelist_selection = explode("\n", file_get_contents($whitelist_file));
-}
-
 try {
 
 	Bridge::setDir(__DIR__ . '/bridges/');
 	Format::setDir(__DIR__ . '/formats/');
 	Cache::setDir(__DIR__ . '/caches/');
+
+	if(!file_exists($whitelist_file)){
+		$whitelist_selection = $whitelist_default;
+		$whitelist_write = implode("\n", $whitelist_default);
+		file_put_contents($whitelist_file, $whitelist_write);
+	} else {
+
+		$whitelist_file_content = file_get_contents($whitelist_file);
+		if($whitelist_file_content != "*\n") {
+			$whitelist_selection = explode("\n", $whitelist_file_content);
+		} else {
+			$whitelist_selection = Bridge::listBridges();
+		}
+	}
 
 	$action = filter_input(INPUT_GET, 'action');
 	$bridge = filter_input(INPUT_GET, 'bridge');
@@ -136,7 +145,7 @@ try {
 
 		$noproxy = filter_input(INPUT_GET, '_noproxy', FILTER_VALIDATE_BOOLEAN);
 		if(defined('PROXY_URL') && PROXY_BYBRIDGE && $noproxy){
-			define('NOPROXY',true);
+			define('NOPROXY', true);
 		}
 
 		$params = $_GET;
@@ -189,10 +198,18 @@ $formats = Format::searchInformation();
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta name="description" content="Rss-bridge" />
 	<title>RSS-Bridge</title>
-	<link href="css/style.css" rel="stylesheet">
+	<link href="static/style.css" rel="stylesheet">
+	<script src="static/search.js"></script>
+	<noscript>
+		<style>
+			.searchbar {
+				display: none;
+			}
+		</style>
+	</noscript>
 </head>
 
-<body>
+<body onload="search()">
 	<?php
 		$status = '';
 		if(defined('DEBUG') && DEBUG === true){
@@ -205,6 +222,13 @@ $formats = Format::searchInformation();
 		<h2>·Reconnecting the Web·</h2>
 		<p class="status">{$status}</p>
 	</header>
+	<section class="searchbar">
+		<h3>Search</h3>
+		<input type="text" name="searchfield"
+			id="searchfield" placeholder="Enter the bridge you want to search for"
+			onchange="search()" onkeyup="search()">
+	</section>
+
 EOD;
 
 		$activeFoundBridgeCount = 0;
@@ -222,7 +246,7 @@ EOD;
 		}
 		echo $inactiveBridges;
 	?>
-	<section>
+	<section class="footer">
 		<a href="https://github.com/RSS-Bridge/rss-bridge">RSS-Bridge alpha 0.2 ~ Public Domain</a><br />
 		<?= $activeFoundBridgeCount; ?>/<?= count($bridgeList) ?> active bridges. <br />
 		<?php

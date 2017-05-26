@@ -1,75 +1,88 @@
 <?php
-class SexactuBridge extends BridgeAbstract{
+class SexactuBridge extends BridgeAbstract {
 
-	const MAINTAINER = "Riduidel";
-	const NAME = "Sexactu";
-	const URI = "https://www.gqmagazine.fr";
+	const MAINTAINER = 'Riduidel';
+	const NAME = 'Sexactu';
+	const AUTHOR = 'Maïa Mazaurette';
+	const URI = 'http://www.gqmagazine.fr';
 	const CACHE_TIMEOUT = 7200; // 2h
-	const DESCRIPTION = "Sexactu via rss-bridge";
+	const DESCRIPTION = 'Sexactu via rss-bridge';
 
-    public function collectData(){
-$find = array('janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'novembre', 'décembre');
-$replace = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+	const REPLACED_ATTRIBUTES = array(
+			'href' => 'href',
+			'src' => 'src',
+			'data-original' => 'src'
+	);
 
-    $html = getSimpleHTMLDOM($this->getURI()) or returnServerError('Could not request '.$this->getURI());
+	public function getURI(){
+		return self::URI . '/sexactu';
+	}
 
-        foreach($html->find('.content-holder') as $contentHolder) {
-            // only use first list as second one only contains pages numbers
-            $articles = $contentHolder->find('ul', 0);
-            foreach($articles->find('li') as $element) {
-                // if you ask about that method_exists, there seems to be a bug in simple html dom
-                // see stackoverflow for more details : http://stackoverflow.com/a/10828479/15619
-                if(is_object($element)) {
-                    $item = array();
-                    // various metadata
-                    $titleBlock = $element->find('.title-holder', 0);
-                    if(is_object($titleBlock)) {
-                        $titleDetails = $titleBlock->find('.article-title',0);
-                        $titleData = $titleDetails->find('h2', 0)->find('a',0);
-                        $titleTimestamp =$titleDetails->find('h4',0);
-                        $item['title'] = $this->correctCase(trim($titleData->innertext));
-                        $item['uri'] = self::URI.$titleData->href;
+	public function collectData(){
+		$html = getSimpleHTMLDOM($this->getURI())
+			or returnServerError('Could not request ' . $this->getURI());
 
-                        // Fugly date parsing due to the fact my DNS-323 doesn't support php intl extension
-                        $dateText = $titleTimestamp->innertext;
-                        $dateText = substr($dateText, strpos($dateText,',')+1);
-                        $dateText = str_replace($find, $replace, strtolower($dateText));
-                        $date = strtotime($dateText);
-                        $item['timestamp'] = $date;
+		$sexactu = $html->find('.container_sexactu', 0);
+		$rowList = $sexactu->find('.row');
+		foreach($rowList as $row){
+			// only use first list as second one only contains pages numbers
 
-                        $item['author'] = "Maïa Mazaurette";
-                        $elementText = $element->find('.text-container', 0);
-                        // don't forget to replace images server url with gq one
-                        foreach($elementText->find('img') as $image) {
-                            $image->src = self::URI.$image->src;
-                        }
-                        $item['content'] = $elementText->innertext;
-                        $this->items[] = $item;
-                    }
+			$title = $row->find('.title', 0);
+			if($title){
+				$item = array();
+				$item['author'] = self::AUTHOR;
+				$item['title'] = $title->plaintext;
+				$urlAttribute = "data-href";
+				$uri = $title->$urlAttribute;
+				if($uri === false)
+					continue;
+				if(substr($uri, 0, 1) === 'h'){ // absolute uri
+					$item['uri'] = $uri;
+				} else if(substr($uri, 0, 1) === '/'){ // domain relative url
+					$item['uri'] = self::URI . $uri;
+				} else {
+					$item['uri'] = $this->getURI() . $uri;
+				}
+				$article = $this->loadFullArticle($item['uri']);
+				$item['content'] = $this->replaceUriInHtmlElement($article->find('.article_content', 0));
 
-                }
+				$publicationDate = $article->find('time[itemprop=datePublished]', 0);
+				$short_date = $publicationDate->datetime;
+				$item['timestamp'] = strtotime($short_date);
+			} else {
+				// Sometimes we get rubbish, ignore.
+				continue;
+			}
+			$this->items[] = $item;
+		}
+	}
 
-            }
-        }
-    }
+	/**
+	 * Loads the full article and returns the contents
+	 * @param $uri The article URI
+	 * @return The article content
+	 */
+	private function loadFullArticle($uri){
+		$html = getSimpleHTMLDOMCached($uri);
 
-    public function getURI(){
-        return self::URI.'/sexactu';
-    }
+		$content = $html->find('#article', 0);
+		if($content){
+			return $content;
+		}
 
-    private function correctCase($str) {
-        $sentences=explode('.', mb_strtolower($str, "UTF-8"));
-        $str="";
-        $sep="";
-        foreach ($sentences as $sentence)
-        {
-           //upper case first char
-           $sentence=ucfirst(trim($sentence));
+		return null;
+	}
 
-           //append sentence to output
-           $str=$str.$sep.$sentence;
-           $sep=". ";
-        }
-        return $str;
-    }
+	/**
+	 * Replaces all relative URIs with absolute ones
+	 * @param $element A simplehtmldom element
+	 * @return The $element->innertext with all URIs replaced
+	 */
+	private function replaceUriInHtmlElement($element){
+		$returned = $element->innertext;
+		foreach (self::REPLACED_ATTRIBUTES as $initial => $final) {
+			$returned = str_replace($initial . '="/', $final . '="' . self::URI . '/', $returned);
+		}
+		return $returned;
+	}
 }

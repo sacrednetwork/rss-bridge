@@ -82,12 +82,12 @@ abstract class FeedExpander extends BridgeAbstract {
 
 	// TODO set title, link, description, language, and so on
 	protected function load_RSS_2_0_feed_data($rssContent){
-		$this->name = trim($rssContent->title);
-		$this->uri = trim($rssContent->link);
+		$this->name = trim((string)$rssContent->title);
+		$this->uri = trim((string)$rssContent->link);
 	}
 
 	protected function load_ATOM_feed_data($content){
-		$this->name = $content->title;
+		$this->name = (string)$content->title;
 
 		// Find best link (only one, or first of 'alternate')
 		if(!isset($content->link)){
@@ -149,7 +149,7 @@ abstract class FeedExpander extends BridgeAbstract {
 		if(isset($feedItem->guid)){
 			foreach($feedItem->guid->attributes() as $attribute => $value){
 				if($attribute === 'isPermaLink'
-				&& ($value === 'true' || filter_var($feedItem->guid,FILTER_VALIDATE_URL))){
+				&& ($value === 'true' || filter_var($feedItem->guid, FILTER_VALIDATE_URL))){
 					$item['uri'] = (string)$feedItem->guid;
 					break;
 				}
@@ -190,10 +190,10 @@ abstract class FeedExpander extends BridgeAbstract {
 	}
 
 	public function getURI(){
-		return $this->uri;
+		return $this->uri ?: parent::getURI();
 	}
 
 	public function getName(){
-		return $this->name;
+		return $this->name ?: parent::getName();
 	}
 }

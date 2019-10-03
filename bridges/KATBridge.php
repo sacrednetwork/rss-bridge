@@ -36,6 +36,11 @@ class KATBridge extends BridgeAbstract {
 			'name' => 'Only get results from Elite or Verified uploaders ?',
 		),
 	));
+
+	public function getIcon() {
+		return 'https://statuskatcrco-631f.kxcdn.com/assets/images/favicon.ico';
+	}
+
 	public function collectData(){
 		function parseDateTimestamp($element){
 				$guessedDate = strptime($element, '%d-%m-%Y %H:%M:%S');
@@ -48,24 +53,24 @@ class KATBridge extends BridgeAbstract {
 				$guessedDate['tm_year'] + 1900);
 				return $timestamp;
 		}
+
 		$catBool = $this->getInput('cat_check');
-		if($catBool){
+		if($catBool) {
 			$catNum = $this->getInput('cat');
 		}
 		$critList = $this->getInput('crit');
 		$trustedBool = $this->getInput('trusted');
 		$keywordsList = explode(';', $this->getInput('q'));
-		foreach($keywordsList as $keywords){
-			switch($critList){
+		foreach($keywordsList as $keywords) {
+			switch($critList) {
 			case 'search':
-				if($catBool == false){
+				if($catBool == false) {
 					$html = getSimpleHTMLDOM(
 						self::URI .
 						'torrents-search.php?search=' .
 						rawurlencode($keywords)
 					) or returnServerError('Could not request KAT.');
-				}
-				else {
+				} else {
 					$html = getSimpleHTMLDOM(
 						self::URI .
 						'torrents-search.php?search=' .
@@ -92,10 +97,10 @@ class KATBridge extends BridgeAbstract {
 			}
 			if ($html->find('table.ttable_headinner', 0) == false)
 				returnServerError('No result for query ' . $keywords);
-			foreach($html->find('tr.t-row') as $element){
+			foreach($html->find('tr.t-row') as $element) {
 				if(!$trustedBool
 				|| !is_null($element->find('i[title="Elite Uploader"]', 0))
-				|| !is_null($element->find('i[title="Verified Uploader"]', 0))){
+				|| !is_null($element->find('i[title="Verified Uploader"]', 0))) {
 					$item = array();
 					$item['uri'] = self::URI . $element->find('a', 2)->href;
 					$item['id'] = self::URI . $element->find('a.cellMainLink', 0)->href;

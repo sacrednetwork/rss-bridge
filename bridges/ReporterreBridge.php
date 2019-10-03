@@ -9,7 +9,7 @@ class ReporterreBridge extends BridgeAbstract {
 		private function extractContent($url){
 			$html2 = getSimpleHTMLDOM($url);
 
-			foreach($html2->find('div[style=text-align:justify]') as $e){
+			foreach($html2->find('div[style=text-align:justify]') as $e) {
 				$text = $e->outertext;
 			}
 
@@ -19,7 +19,7 @@ class ReporterreBridge extends BridgeAbstract {
 			// Replace all relative urls with absolute ones
 			$text = preg_replace(
 				'/(href|src)(\=[\"\'])(?!http)([^"\']+)/ims',
-				"$1$2" . self::URI . "$3",
+				'$1$2' . self::URI . '$3',
 				$text
 			);
 
@@ -32,7 +32,7 @@ class ReporterreBridge extends BridgeAbstract {
 			or returnServerError('Could not request Reporterre.');
 		$limit = 0;
 
-		foreach($html->find('item') as $element){
+		foreach($html->find('item') as $element) {
 			if($limit < 5) {
 				$item = array();
 				$item['title'] = html_entity_decode($element->find('title', 0)->plaintext);

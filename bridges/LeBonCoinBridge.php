@@ -1,190 +1,537 @@
 <?php
 class LeBonCoinBridge extends BridgeAbstract {
 
-	const MAINTAINER = '16mhz';
+	const MAINTAINER = 'jacknumber';
 	const NAME = 'LeBonCoin';
 	const URI = 'https://www.leboncoin.fr/';
-	const DESCRIPTION = 'Returns most recent results from LeBonCoin for a
-region, and optionally a category and a keyword .';
+	const DESCRIPTION = 'Returns most recent results from LeBonCoin';
 
 	const PARAMETERS = array(
 		array(
-			'k' => array('name' => 'Mot Clé'),
-			'r' => array(
+			'keywords' => array('name' => 'Mots-Clés'),
+			'region' => array(
 				'name' => 'Région',
 				'type' => 'list',
 				'values' => array(
-					'Toute la France' => 'ile_de_france/occasions',
-					'Alsace' => 'alsace',
-					'Aquitaine' => 'aquitaine',
-					'Auvergne' => 'auvergne',
-					'Basse Normandie' => 'basse_normandie',
-					'Bourgogne' => 'bourgogne',
-					'Bretagne' => 'bretagne',
-					'Centre' => 'centre',
-					'Champagne Ardenne' => 'champagne_ardenne',
-					'Corse' => 'corse',
-					'Franche Comté' => 'franche_comte',
-					'Haute Normandie' => 'haute_normandie',
-					'Ile de France' => 'ile_de_france',
-					'Languedoc Roussillon' => 'languedoc_roussillon',
-					'Limousin' => 'limousin',
-					'Lorraine' => 'lorraine',
-					'Midi Pyrénées' => 'midi_pyrenees',
-					'Nord Pas De Calais' => 'nord_pas_de_calais',
-					'Pays de la Loire' => 'pays_de_la_loire',
-					'Picardie' => 'picardie',
-					'Poitou Charentes' => 'poitou_charentes',
-					'Provence Alpes Côte d\'Azur' => 'provence_alpes_cote_d_azur',
-					'Rhône-Alpes' => 'rhone_alpes',
-					'Guadeloupe' => 'guadeloupe',
-					'Martinique' => 'martinique',
-					'Guyane' => 'guyane',
-					'Réunion' => 'reunion'
+					'Toute la France' => '',
+					'Alsace' => '1',
+					'Aquitaine' => '2',
+					'Auvergne' => '3',
+					'Basse Normandie' => '4',
+					'Bourgogne' => '5',
+					'Bretagne' => '6',
+					'Centre' => '7',
+					'Champagne Ardenne' => '8',
+					'Corse' => '9',
+					'Franche Comté' => '10',
+					'Haute Normandie' => '11',
+					'Ile de France' => '12',
+					'Languedoc Roussillon' => '13',
+					'Limousin' => '14',
+					'Lorraine' => '15',
+					'Midi Pyrénées' => '16',
+					'Nord Pas De Calais' => '17',
+					'Pays de la Loire' => '18',
+					'Picardie' => '19',
+					'Poitou Charentes' => '20',
+					'Provence Alpes Côte d\'Azur' => '21',
+					'Rhône-Alpes' => '22',
+					'Guadeloupe' => '23',
+					'Martinique' => '24',
+					'Guyane' => '25',
+					'Réunion' => '26'
 				)
 			),
-			'c' => array(
+			'department' => array(
+				'name' => 'Département',
+				'type' => 'list',
+				'values' => array(
+					'' => '',
+					'Ain' => '1',
+					'Aisne' => '2',
+					'Allier' => '3',
+					'Alpes-de-Haute-Provence' => '4',
+					'Hautes-Alpes' => '5',
+					'Alpes-Maritimes' => '6',
+					'Ardèche' => '7',
+					'Ardennes' => '8',
+					'Ariège' => '9',
+					'Aube' => '10',
+					'Aude' => '11',
+					'Aveyron' => '12',
+					'Bouches-du-Rhône' => '13',
+					'Calvados' => '14',
+					'Cantal' => '15',
+					'Charente' => '16',
+					'Charente-Maritime' => '17',
+					'Cher' => '18',
+					'Corrèze' => '19',
+					'Corse-du-Sud' => '2A',
+					'Haute-Corse' => '2B',
+					'Côte-d\'Or' => '21',
+					'Côtes-d\'Armor' => '22',
+					'Creuse' => '23',
+					'Dordogne' => '24',
+					'Doubs' => '25',
+					'Drôme' => '26',
+					'Eure' => '27',
+					'Eure-et-Loir' => '28',
+					'Finistère' => '29',
+					'Gard' => '30',
+					'Haute-Garonne' => '31',
+					'Gers' => '32',
+					'Gironde' => '33',
+					'Hérault' => '34',
+					'Ille-et-Vilaine' => '35',
+					'Indre' => '36',
+					'Indre-et-Loire' => '37',
+					'Isère' => '38',
+					'Jura' => '39',
+					'Landes' => '40',
+					'Loir-et-Cher' => '41',
+					'Loire' => '42',
+					'Haute-Loire' => '43',
+					'Loire-Atlantique' => '44',
+					'Loiret' => '45',
+					'Lot' => '46',
+					'Lot-et-Garonne' => '47',
+					'Lozère' => '48',
+					'Maine-et-Loire' => '49',
+					'Manche' => '50',
+					'Marne' => '51',
+					'Haute-Marne' => '52',
+					'Mayenne' => '53',
+					'Meurthe-et-Moselle' => '54',
+					'Meuse' => '55',
+					'Morbihan' => '56',
+					'Moselle' => '57',
+					'Nièvre' => '58',
+					'Nord' => '59',
+					'Oise' => '60',
+					'Orne' => '61',
+					'Pas-de-Calais' => '62',
+					'Puy-de-Dôme' => '63',
+					'Pyrénées-Atlantiques' => '64',
+					'Hautes-Pyrénées' => '65',
+					'Pyrénées-Orientales' => '66',
+					'Bas-Rhin' => '67',
+					'Haut-Rhin' => '68',
+					'Rhône' => '69',
+					'Haute-Saône' => '70',
+					'Saône-et-Loire' => '71',
+					'Sarthe' => '72',
+					'Savoie' => '73',
+					'Haute-Savoie' => '74',
+					'Paris' => '75',
+					'Seine-Maritime' => '76',
+					'Seine-et-Marne' => '77',
+					'Yvelines' => '78',
+					'Deux-Sèvres' => '79',
+					'Somme' => '80',
+					'Tarn' => '81',
+					'Tarn-et-Garonne' => '82',
+					'Var' => '83',
+					'Vaucluse' => '84',
+					'Vendée' => '85',
+					'Vienne' => '86',
+					'Haute-Vienne' => '87',
+					'Vosges' => '88',
+					'Yonne' => '89',
+					'Territoire de Belfort' => '90',
+					'Essonne' => '91',
+					'Hauts-de-Seine' => '92',
+					'Seine-Saint-Denis' => '93',
+					'Val-de-Marne' => '94',
+					'Val-d\'Oise' => '95'
+				)
+			),
+			'cities' => array(
+				'name' => 'Villes',
+				'title' => 'Codes postaux séparés par des virgules'
+			),
+			'category' => array(
 				'name' => 'Catégorie',
 				'type' => 'list',
 				'values' => array(
-					'TOUS' => '',
-					'EMPLOI' => '_emploi_',
-					'VEHICULES' => array(
-						'Tous' => '_vehicules_',
-						'Voitures' => 'voitures',
-						'Motos' => 'motos',
-						'Caravaning' => 'caravaning',
-						'Utilitaires' => 'utilitaires',
-						'Équipement Auto' => 'equipement_auto',
-						'Équipement Moto' => 'equipement_moto',
-						'Équipement Caravaning' => 'equipement_caravaning',
-						'Nautisme' => 'nautisme',
-						'Équipement Nautisme' => 'equipement_nautisme'
+					'Toutes catégories' => '',
+					'EMPLOI' => array(
+						'Emploi et recrutement' => '71',
+						'Offres d\'emploi et jobs' => '33'
+					),
+					'VÉHICULES' => array(
+						'Tous' => '1',
+						'Voitures' => '2',
+						'Motos' => '3',
+						'Caravaning' => '4',
+						'Utilitaires' => '5',
+						'Equipement Auto' => '6',
+						'Equipement Moto' => '44',
+						'Equipement Caravaning' => '50',
+						'Nautisme' => '7',
+						'Equipement Nautisme' => '51'
 					),
 					'IMMOBILIER' => array(
-						'Tous' => '_immobilier_',
-						'Ventes immobilières' => 'ventes_immobilieres',
-						'Locations' => 'locations',
-						'Colocations' => 'colocations',
-						'Bureaux & Commerces' => 'bureaux_commerces'
+						'Tous' => '8',
+						'Ventes immobilières' => '9',
+						'Locations' => '10',
+						'Colocations' => '11',
+						'Bureaux & Commerces' => '13'
 					),
 					'VACANCES' => array(
-						'Tous' => '_vacances_',
-						'Location gîtes' => 'locations_gites',
-						'Chambres d\'hôtes' => 'chambres_d_hotes',
-						'Campings' => 'campings',
-						'Hôtels' => 'hotels',
-						'Hébergements insolites' => 'hebergements_insolites'
+						'Tous' => '66',
+						'Locations & Gîtes' => '12',
+						'Chambres d\'hôtes' => '67',
+						'Campings' => '68',
+						'Hôtels' => '69',
+						'Hébergements insolites' => '70'
 					),
-					'MULTIMEDIA' => array(
-						'Tous' => '_multimedia_',
-						'Informatique' => 'informatique',
-						'Consoles & Jeux vidéo' => 'consoles_jeux_video',
-						'Image & Son' => 'image_son',
-						'Téléphonie' => 'telephonie'
+					'MULTIMÉDIA' => array(
+						'Tous' => '14',
+						'Informatique' => '15',
+						'Consoles & Jeux vidéo' => '43',
+						'Image & Son' => '16',
+						'Téléphonie' => '17'
 					),
 					'LOISIRS' => array(
-						'Tous' => '_loisirs_',
-						'DVD / Films' => 'dvd_films',
-						'CD / Musique' => 'cd_musique',
-						'Livres' => 'livres',
-						'Animaux' => 'animaux',
-						'Vélos' => 'velos',
-						'Sports & Hobbies' => 'sports_hobbies',
-						'Instruments de musique' => 'instruments_de_musique',
-						'Collection' => 'collection',
-						'Jeux & Jouets' => 'jeux_jouets',
-						'Vins & Gastronomie' => 'vins_gastronomie'
+						'Tous' => '24',
+						'DVD / Films' => '25',
+						'CD / Musique' => '26',
+						'Livres' => '27',
+						'Animaux' => '28',
+						'Vélos' => '55',
+						'Sports & Hobbies' => '29',
+						'Instruments de musique' => '30',
+						'Collection' => '40',
+						'Jeux & Jouets' => '41',
+						'Vins & Gastronomie' => '48'
 					),
 					'MATÉRIEL PROFESSIONNEL' => array(
-						'Tous' => '_materiel_professionnel_',
-						'Matériel Agricole' => 'mateiel_agricole',
-						'Transport - Manutention' => 'transport_manutention',
-						'BTP - Chantier - Gros-œuvre' => 'btp_chantier_gros_oeuvre',
-						'Outillage - Matériaux 2nd-œuvre' => 'outillage_materiaux_2nd_oeuvre',
-						'Équipements Industriels' => 'equipement_industriels',
-						'Restauration - Hôtellerie' => 'restauration_hotellerie',
-						'Fournitures de Bureau' => 'fournitures_de_bureau',
-						'Commerces & Marchés' => 'commerces_marches',
-						'Matériel médical' => 'materiel_medical'
+						'Tous' => '56',
+						'Matériel Agricole' => '57',
+						'Transport - Manutention' => '58',
+						'BTP - Chantier Gros-oeuvre' => '59',
+						'Outillage - Matériaux 2nd-oeuvre' => '60',
+						'Équipements Industriels' => '32',
+						'Restauration - Hôtellerie' => '61',
+						'Fournitures de Bureau' => '62',
+						'Commerces & Marchés' => '63',
+						'Matériel Médical' => '64'
 					),
 					'SERVICES' => array(
-						'Tous' => '_services_',
-						'Prestations de services' => 'prestations_de_services',
-						'Billetterie' => 'billetterie',
-						'Évènements' => 'evenements',
-						'Cours particuliers' => 'cours_particuliers',
-						'Covoiturage' => 'covoiturage'
+						'Tous' => '31',
+						'Prestations de services' => '34',
+						'Billetterie' => '35',
+						'Événements' => '49',
+						'Cours particuliers' => '36',
+						'Covoiturage' => '65'
 					),
 					'MAISON' => array(
-						'Tous' => '_maison_',
-						'Ameublement' => 'ameublement',
-						'Électroménager' => 'electromenager',
-						'Arts de la table' => 'arts_de_la_table',
-						'Décoration' => 'decoration',
-						'Linge de maison' => 'linge_de_maison',
-						'Bricolage' => 'bricolage',
-						'Jardinage' => 'jardinage',
-						'Vêtements' => 'vetements',
-						'Chaussures' => 'chaussures',
-						'Accessoires & Bagagerie' => 'accessoires_bagagerie',
-						'Montres & Bijoux' => 'montres_bijoux',
-						'Équipement bébé' => 'equipement_bebe',
-						'Vêtements bébé' => 'vetements_bebe'
+						'Tous' => '18',
+						'Ameublement' => '19',
+						'Électroménager' => '20',
+						'Arts de la table' => '45',
+						'Décoration' => '39',
+						'Linge de maison' => '46',
+						'Bricolage' => '21',
+						'Jardinage' => '52',
+						'Vêtements' => '22',
+						'Chaussures' => '53',
+						'Accessoires & Bagagerie' => '47',
+						'Montres & Bijoux' => '42',
+						'Équipement bébé' => '23',
+						'Vêtements bébé' => '54',
 					),
-					'AUTRES' => 'autres'
+					'AUTRES' => '37'
+				)
+			),
+			'pricemin' => array(
+				'name' => 'Prix min',
+				'type' => 'number'
+			),
+			'pricemax' => array(
+				'name' => 'Prix max',
+				'type' => 'number'
+			),
+			'estate' => array(
+				'name' => 'Type de bien',
+				'type' => 'list',
+				'values' => array(
+					'' => '',
+					'Maison' => '1',
+					'Appartement' => '2',
+					'Terrain' => '3',
+					'Parking' => '4',
+					'Autre' => '5'
+				)
+			),
+			'roomsmin' => array(
+				'name' => 'Pièces min',
+				'type' => 'number'
+			),
+			'roomsmax' => array(
+				'name' => 'Pièces max',
+				'type' => 'number'
+			),
+			'squaremin' => array(
+				'name' => 'Surface min',
+				'type' => 'number'
+			),
+			'squaremax' => array(
+				'name' => 'Surface max',
+				'type' => 'number'
+			),
+			'mileagemin' => array(
+				'name' => 'Kilométrage min',
+				'type' => 'number'
+			),
+			'mileagemax' => array(
+				'name' => 'Kilométrage max',
+				'type' => 'number'
+			),
+			'yearmin' => array(
+				'name' => 'Année min',
+				'type' => 'number'
+			),
+			'yearmax' => array(
+				'name' => 'Année max',
+				'type' => 'number'
+			),
+			'cubiccapacitymin' => array(
+				'name' => 'Cylindrée min',
+				'type' => 'number'
+			),
+			'cubiccapacitymax' => array(
+				'name' => 'Cylindrée max',
+				'type' => 'number'
+			),
+			'fuel' => array(
+				'name' => 'Énergie',
+				'type' => 'list',
+				'values' => array(
+					'' => '',
+					'Essence' => '1',
+					'Diesel' => '2',
+					'GPL' => '3',
+					'Électrique' => '4',
+					'Hybride' => '6',
+					'Autre' => '5'
+				)
+			),
+			'owner' => array(
+				'name' => 'Vendeur',
+				'type' => 'list',
+				'values' => array(
+					'Tous' => '',
+					'Particuliers' => 'private',
+					'Professionnels' => 'pro'
 				)
 			)
 		)
 	);
 
-	public function collectData(){
+	public static $LBC_API_KEY = 'ba0c2dad52b3ec';
 
-		$category = $this->getInput('c');
-		if(empty($category)){
-				$category = 'annonces';
+	private function getRange($field, $range_min, $range_max){
+
+		if(!is_null($range_min)
+		&& !is_null($range_max)
+		&& $range_min > $range_max) {
+			returnClientError('Min-' . $field . ' must be lower than max-' . $field . '.');
 		}
 
-		$html = getSimpleHTMLDOM(self::URI
-		. $category
-		. '/offres/'
-		. $this->getInput('r')
-		. '/?f=a&th=1&q='
-		. urlencode($this->getInput('k')))
-			or returnServerError('Could not request LeBonCoin.');
+		if(!is_null($range_min)
+		&& is_null($range_max)) {
+			returnClientError('Max-' . $field . ' is needed when min-' . $field . ' is setted (range).');
+		}
 
-		$list = $html->find('.tabsContent', 0);
-		if($list === null){
+		return array(
+			'min' => $range_min,
+			'max' => $range_max
+		);
+	}
+
+	public function collectData(){
+
+		$url = 'https://api.leboncoin.fr/finder/search/';
+		$data = $this->buildRequestJson();
+
+		$header = array(
+			'User-Agent: LBC;Android;Null;Null;Null;Null;Null;Null;Null;Null',
+			'Content-Type: application/json',
+			'Content-Length: ' . strlen($data),
+			'api_key: ' . self::$LBC_API_KEY
+		);
+
+		$opts = array(
+			CURLOPT_CUSTOMREQUEST => 'POST',
+			CURLOPT_POSTFIELDS => $data
+
+		);
+
+		$content = getContents($url, $header, $opts)
+			or returnServerError('Could not request LeBonCoin. Tried: ' . $url);
+
+		$json = json_decode($content);
+
+		if($json->total === 0) {
 			return;
 		}
 
-		$tags = $list->find('li');
+		foreach($json->ads as $element) {
 
-		foreach($tags as $element){
+			$item['title'] = $element->subject;
+			$item['content'] = $element->body;
+			$item['date'] = $element->index_date;
+			$item['timestamp'] = strtotime($element->index_date);
+			$item['uri'] = $element->url;
+			$item['ad_type'] = $element->ad_type;
+			$item['author'] = $element->owner->name;
 
-			$element = $element->find('a', 0);
+			if(isset($element->location->city)) {
 
-			$item = array();
-			$item['uri'] = $element->href;
-			$title = html_entity_decode($element->getAttribute('title'));
-			$content_image = $element->find('div.item_image', 0)->find('.lazyload', 0);
+				$item['city'] = $element->location->city;
+				$item['content'] .= ' -- ' . $element->location->city;
 
-			if($content_image !== null){
-				$content = '<img src="' . $content_image->getAttribute('data-imgsrc') . '" alt="thumbnail">';
-			} else {
-				$content = "";
 			}
-			$date = $element->find('aside.item_absolute', 0)->find('p.item_sup', 0);
 
-			$detailsList = $element->find('section.item_infos', 0);
+			if(isset($element->location->zipcode)) {
+				$item['zipcode'] = $element->location->zipcode;
+			}
 
-			for($i = 0; $i <= 1; $i++) $content .= $detailsList->find('p.item_supp', $i)->plaintext;
-			$price = $detailsList->find('h3.item_price', 0);
-			$content .= $price === null ? '' : $price->plaintext;
+			if(isset($element->price)) {
 
-			$item['title'] = $title;
-			$item['content'] = $content . $date;
+				$item['price'] = $element->price[0];
+				$item['content'] .= ' -- ' . current($element->price) . '€';
+
+			}
+
+			if(isset($element->images->urls)) {
+
+				$item['thumbnail'] = $element->images->thumb_url;
+				$item['enclosures'] = array();
+
+				foreach($element->images->urls as $image) {
+					$item['enclosures'][] = $image;
+				}
+
+			}
+
 			$this->items[] = $item;
 		}
+	}
+
+	private function buildRequestJson() {
+
+		$requestJson = new StdClass();
+		$requestJson->owner_type = $this->getInput('owner');
+		$requestJson->filters = new StdClass();
+
+		$requestJson->filters->keywords = array(
+			'text' => $this->getInput('keywords')
+		);
+
+		if($this->getInput('region') != '') {
+			$requestJson->filters->location['regions'] = [$this->getInput('region')];
+		}
+
+		if($this->getInput('department') != '') {
+			$requestJson->filters->location['departments'] = [$this->getInput('department')];
+		}
+
+		if($this->getInput('cities') != '') {
+
+			$requestJson->filters->location['city_zipcodes'] = array();
+
+			foreach (explode(',', $this->getInput('cities')) as $zipcode) {
+
+				$requestJson->filters->location['city_zipcodes'][] = array(
+					'zipcode' => trim($zipcode)
+				);
+			}
+
+		}
+
+		$requestJson->filters->category = array(
+			'id' => $this->getInput('category')
+		);
+
+		if($this->getInput('pricemin') != ''
+		|| $this->getInput('pricemax') != '') {
+
+			$requestJson->filters->ranges->price = $this->getRange(
+				'price',
+				$this->getInput('pricemin'),
+				$this->getInput('pricemax')
+			);
+
+		}
+
+		if($this->getInput('estate') != '') {
+			$requestJson->filters->enums['real_estate_type'] = [$this->getInput('estate')];
+		}
+
+		if($this->getInput('roomsmin') != ''
+		|| $this->getInput('roomsmax') != '') {
+
+			$requestJson->filters->ranges->rooms = $this->getRange(
+				'rooms',
+				$this->getInput('roomsmin'),
+				$this->getInput('roomsmax')
+			);
+
+		}
+
+		if($this->getInput('squaremin') != ''
+		|| $this->getInput('squaremax') != '') {
+
+			$requestJson->filters->ranges->square = $this->getRange(
+				'square',
+				$this->getInput('squaremin'),
+				$this->getInput('squaremax')
+			);
+
+		}
+
+		if($this->getInput('mileagemin') != ''
+		|| $this->getInput('mileagemax') != '') {
+
+			$requestJson->filters->ranges->mileage = $this->getRange(
+				'mileage',
+				$this->getInput('mileagemin'),
+				$this->getInput('mileagemax')
+			);
+
+		}
+
+		if($this->getInput('yearmin') != ''
+		|| $this->getInput('yearmax') != '') {
+
+			$requestJson->filters->ranges->regdate = $this->getRange(
+				'year',
+				$this->getInput('yearmin'),
+				$this->getInput('yearmax')
+			);
+
+		}
+
+		if($this->getInput('cubiccapacitymin') != ''
+		|| $this->getInput('cubiccapacitymax') != '') {
+
+			$requestJson->filters->ranges->cubic_capacity = $this->getRange(
+				'cubic_capacity',
+				$this->getInput('cubiccapacitymin'),
+				$this->getInput('cubiccapacitymax')
+			);
+
+		}
+
+		if($this->getInput('fuel') != '') {
+			$requestJson->filters->enums['fuel'] = [$this->getInput('fuel')];
+		}
+
+		$requestJson->limit = 30;
+
+		return json_encode($requestJson);
+
 	}
 }

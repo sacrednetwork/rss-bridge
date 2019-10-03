@@ -227,8 +227,19 @@ pip-log.txt
 /cache
 /whitelist.txt
 DEBUG
+config.ini.php
 
 ######################
 ## VisualStudioCode ##
 ######################
 .vscode/*
+
+#Builder
+.buildconfig
+
+#Auth
+.htaccess
+.htpasswd
+
+#Crawler
+robots.txt

@@ -14,6 +14,10 @@ class TagBoardBridge extends BridgeAbstract {
 		)
 	));
 
+	public function getIcon() {
+		return 'https://static.tagboard.com/public/favicon-32x32.png';
+	}
+
 	public function collectData(){
 		$link = 'https://post-cache.tagboard.com/search/' . $this->getInput('u');
 
@@ -21,12 +25,12 @@ class TagBoardBridge extends BridgeAbstract {
 			or returnServerError('Could not request TagBoard for : ' . $link);
 		$parsed_json = json_decode($html);
 
-		foreach($parsed_json->{'posts'} as $element){
+		foreach($parsed_json->{'posts'} as $element) {
 			$item = array();
 			$item['uri'] = $element->{'permalink'};
 			$item['title'] = $element->{'text'};
 			$thumbnailUri = $element->{'photos'}[0]->{'m'};
-			if(isset($thumbnailUri)){
+			if(isset($thumbnailUri)) {
 				$item['content'] = '<a href="'
 				. $item['uri']
 				. '"><img src="'
@@ -40,7 +44,7 @@ class TagBoardBridge extends BridgeAbstract {
 	}
 
 	public function getName(){
-		if(!is_null($this->getInput('u'))){
+		if(!is_null($this->getInput('u'))) {
 			return 'tagboard - ' . $this->getInput('u');
 		}
 

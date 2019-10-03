@@ -1,51 +1,118 @@
 <?php
-require_once(__DIR__ . '/BridgeInterface.php');
+/**
+ * This file is part of RSS-Bridge, a PHP project capable of generating RSS and
+ * Atom feeds for websites that don't have one.
+ *
+ * For the full license information, please view the UNLICENSE file distributed
+ * with this source code.
+ *
+ * @package	Core
+ * @license	http://unlicense.org/ UNLICENSE
+ * @link	https://github.com/rss-bridge/rss-bridge
+ */
+
+/**
+ * An abstract class for bridges
+ *
+ * This class implements {@see BridgeInterface} with most common functions in
+ * order to reduce code duplication. Bridges should inherit from this class
+ * instead of implementing the interface manually.
+ *
+ * @todo Move constants to the interface (this is supported by PHP)
+ * @todo Change visibility of constants to protected
+ * @todo Return `self` on more functions to allow chaining
+ * @todo Add specification for PARAMETERS ()
+ * @todo Add specification for $items
+ */
 abstract class BridgeAbstract implements BridgeInterface {
 
+	/**
+	 * Name of the bridge
+	 *
+	 * Use {@see BridgeAbstract::getName()} to read this parameter
+	 */
 	const NAME = 'Unnamed bridge';
+
+	/**
+	 * URI to the site the bridge is intended to be used for.
+	 *
+	 * Use {@see BridgeAbstract::getURI()} to read this parameter
+	 */
 	const URI = '';
+
+	/**
+	 * A brief description of what the bridge can do
+	 *
+	 * Use {@see BridgeAbstract::getDescription()} to read this parameter
+	 */
 	const DESCRIPTION = 'No description provided';
+
+	/**
+	 * The name of the maintainer. Multiple maintainers can be separated by comma
+	 *
+	 * Use {@see BridgeAbstract::getMaintainer()} to read this parameter
+	 */
 	const MAINTAINER = 'No maintainer';
+
+	/**
+	 * The default cache timeout for the bridge
+	 *
+	 * Use {@see BridgeAbstract::getCacheTimeout()} to read this parameter
+	 */
 	const CACHE_TIMEOUT = 3600;
+
+	/**
+	 * Parameters for the bridge
+	 *
+	 * Use {@see BridgeAbstract::getParameters()} to read this parameter
+	 */
 	const PARAMETERS = array();
 
-	protected $cache;
-	protected $extraInfos;
+	/**
+	 * Holds the list of items collected by the bridge
+	 *
+	 * Items must be collected by {@see BridgeInterface::collectData()}
+	 *
+	 * Use {@see BridgeAbstract::getItems()} to access items.
+	 *
+	 * @var array
+	 */
 	protected $items = array();
+
+	/**
+	 * Holds the list of input parameters used by the bridge
+	 *
+	 * Do not access this parameter directly!
+	 * Use {@see BridgeAbstract::setInputs()} and {@see BridgeAbstract::getInput()} instead!
+	 *
+	 * @var array
+	 */
 	protected $inputs = array();
+
+	/**
+	 * Holds the name of the queried context
+	 *
+	 * @var string
+	 */
 	protected $queriedContext = '';
 
-	/**
-	* Return cachable datas (extrainfos and items) stored in the bridge
-	* @return mixed
-	*/
-	public function getCachable(){
-		return array(
-			'items' => $this->getItems(),
-			'extraInfos' => $this->getExtraInfos()
-		);
-	}
-
-	/**
-	* Return items stored in the bridge
-	* @return mixed
-	*/
+	/** {@inheritdoc} */
 	public function getItems(){
 		return $this->items;
 	}
 
 	/**
-	 * Sets the input values for a given context. Existing values are
-	 * overwritten.
+	 * Sets the input values for a given context.
 	 *
 	 * @param array $inputs Associative array of inputs
-	 * @param string $context The context name
+	 * @param string $queriedContext The context name
+	 * @return void
 	 */
 	protected function setInputs(array $inputs, $queriedContext){
 		// Import and assign all inputs to their context
-		foreach($inputs as $name => $value){
-			foreach(static::PARAMETERS as $context => $set){
-				if(array_key_exists($name, static::PARAMETERS[$context])){
+		foreach($inputs as $name => $value) {
+			foreach(static::PARAMETERS as $context => $set) {
+				if(array_key_exists($name, static::PARAMETERS[$context])) {
 					$this->inputs[$context][$name]['value'] = $value;
 				}
 			}
@@ -53,30 +120,30 @@ abstract class BridgeAbstract implements BridgeInterface {
 
 		// Apply default values to missing data
 		$contexts = array($queriedContext);
-		if(array_key_exists('global', static::PARAMETERS)){
+		if(array_key_exists('global', static::PARAMETERS)) {
 			$contexts[] = 'global';
 		}
 
-		foreach($contexts as $context){
-			foreach(static::PARAMETERS[$context] as $name => $properties){
-				if(isset($this->inputs[$context][$name]['value'])){
+		foreach($contexts as $context) {
+			foreach(static::PARAMETERS[$context] as $name => $properties) {
+				if(isset($this->inputs[$context][$name]['value'])) {
 					continue;
 				}
 
 				$type = isset($properties['type']) ? $properties['type'] : 'text';
 
-				switch($type){
+				switch($type) {
 				case 'checkbox':
-					if(!isset($properties['defaultValue'])){
+					if(!isset($properties['defaultValue'])) {
 						$this->inputs[$context][$name]['value'] = false;
 					} else {
 						$this->inputs[$context][$name]['value'] = $properties['defaultValue'];
 					}
 					break;
 				case 'list':
-					if(!isset($properties['defaultValue'])){
+					if(!isset($properties['defaultValue'])) {
 						$firstItem = reset($properties['values']);
-						if(is_array($firstItem)){
+						if(is_array($firstItem)) {
 							$firstItem = reset($firstItem);
 						}
 						$this->inputs[$context][$name]['value'] = $firstItem;
@@ -85,7 +152,7 @@ abstract class BridgeAbstract implements BridgeInterface {
 					}
 					break;
 				default:
-					if(isset($properties['defaultValue'])){
+					if(isset($properties['defaultValue'])) {
 						$this->inputs[$context][$name]['value'] = $properties['defaultValue'];
 					}
 					break;
@@ -94,11 +161,11 @@ abstract class BridgeAbstract implements BridgeInterface {
 		}
 
 		// Copy global parameter values to the guessed context
-		if(array_key_exists('global', static::PARAMETERS)){
-			foreach(static::PARAMETERS['global'] as $name => $properties){
-				if(isset($inputs[$name])){
+		if(array_key_exists('global', static::PARAMETERS)) {
+			foreach(static::PARAMETERS['global'] as $name => $properties) {
+				if(isset($inputs[$name])) {
 					$value = $inputs[$name];
-				} elseif(isset($properties['value'])){
+				} elseif(isset($properties['value'])) {
 					$value = $properties['value'];
 				} else {
 					continue;
@@ -108,7 +175,7 @@ abstract class BridgeAbstract implements BridgeInterface {
 		}
 
 		// Only keep guessed context parameters values
-		if(isset($this->inputs[$queriedContext])){
+		if(isset($this->inputs[$queriedContext])) {
 			$this->inputs = array($queriedContext => $this->inputs[$queriedContext]);
 		} else {
 			$this->inputs = array();
@@ -116,156 +183,119 @@ abstract class BridgeAbstract implements BridgeInterface {
 	}
 
 	/**
-	 * Returns the name of the context matching the provided inputs
+	 * Set inputs for the bridge
 	 *
-	 * @param array $inputs Associative array of inputs
-	 * @return mixed Returns the context name or null if no match was found
+	 * Returns errors and aborts execution if the provided input parameters are
+	 * invalid.
+	 *
+	 * @param array List of input parameters. Each element in this list must
+	 * relate to an item in {@see BridgeAbstract::PARAMETERS}
+	 * @return void
 	 */
-	protected function getQueriedContext(array $inputs){
-		$queriedContexts = array();
-
-		// Detect matching context
-		foreach(static::PARAMETERS as $context => $set){
-			$queriedContexts[$context] = null;
-
-			// Check if all parameters of the context are satisfied
-			foreach($set as $id => $properties){
-				if(isset($inputs[$id]) && !empty($inputs[$id])){
-					$queriedContexts[$context] = true;
-				} elseif(isset($properties['required'])
-				&& $properties['required'] === true){
-					$queriedContexts[$context] = false;
-					break;
-				}
-			}
-
-		}
-
-		// Abort if one of the globally required parameters is not satisfied
-		if(array_key_exists('global', static::PARAMETERS)
-		&& $queriedContexts['global'] === false){
-			return null;
-		}
-		unset($queriedContexts['global']);
-
-		switch(array_sum($queriedContexts)){
-		case 0: // Found no match, is there a context without parameters?
-			foreach($queriedContexts as $context => $queried){
-				if(is_null($queried)){
-					return $context;
-				}
-			}
-			return null;
-		case 1: // Found unique match
-			return array_search(true, $queriedContexts);
-		default: return false;
-		}
-	}
-
-	/**
-	* Defined datas with parameters depending choose bridge
-	* Note : you can define a cache with "setCache"
-	* @param array array with expected bridge paramters
-	*/
 	public function setDatas(array $inputs){
-		if(!is_null($this->cache)){
-			$time = $this->cache->getTime();
-			if($time !== false
-			&& (time() - static::CACHE_TIMEOUT < $time)
-			&& (!defined('DEBUG') || DEBUG !== true)){
-				$cached = $this->cache->loadData();
-				if(isset($cached['items']) && isset($cached['extraInfos'])){
-					$this->items = $cached['items'];
-					$this->extraInfos = $cached['extraInfos'];
-					return;
-				}
-			}
+
+		if(isset($inputs['context'])) { // Context hinting (optional)
+			$this->queriedContext = $inputs['context'];
+			unset($inputs['context']);
 		}
 
-		if(empty(static::PARAMETERS)){
-			if(!empty($inputs)){
+		if(empty(static::PARAMETERS)) {
+
+			if(!empty($inputs)) {
 				returnClientError('Invalid parameters value(s)');
 			}
 
-			$this->collectData();
-			if(!is_null($this->cache)){
-				$this->cache->saveData($this->getCachable());
-			}
 			return;
+
 		}
 
-		if(!validateData($inputs, static::PARAMETERS)){
-			returnClientError('Invalid parameters value(s)');
+		$validator = new ParameterValidator();
+
+		if(!$validator->validateData($inputs, static::PARAMETERS)) {
+			$parameters = array_map(
+				function($i){ return $i['name']; }, // Just display parameter names
+				$validator->getInvalidParameters()
+			);
+
+			returnClientError(
+				'Invalid parameters value(s): '
+				. implode(', ', $parameters)
+			);
 		}
 
-		// Guess the paramter context from input data
-		$this->queriedContext = $this->getQueriedContext($inputs);
-		if(is_null($this->queriedContext)){
+		// Guess the context from input data
+		if(empty($this->queriedContext)) {
+			$this->queriedContext = $validator->getQueriedContext($inputs, static::PARAMETERS);
+		}
+
+		if(is_null($this->queriedContext)) {
 			returnClientError('Required parameter(s) missing');
-		} elseif($this->queriedContext === false){
+		} elseif($this->queriedContext === false) {
 			returnClientError('Mixed context parameters');
 		}
 
 		$this->setInputs($inputs, $this->queriedContext);
 
-		$this->collectData();
-
-		if(!is_null($this->cache)){
-			$this->cache->saveData($this->getCachable());
-		}
 	}
 
 	/**
 	 * Returns the value for the provided input
 	 *
 	 * @param string $input The input name
-	 * @return mixed Returns the input value or null if the input is not defined
+	 * @return mixed|null The input value or null if the input is not defined
 	 */
 	protected function getInput($input){
-		if(!isset($this->inputs[$this->queriedContext][$input]['value'])){
+		if(!isset($this->inputs[$this->queriedContext][$input]['value'])) {
 			return null;
 		}
 		return $this->inputs[$this->queriedContext][$input]['value'];
 	}
 
+	/** {@inheritdoc} */
 	public function getDescription(){
 		return static::DESCRIPTION;
 	}
 
+	/** {@inheritdoc} */
 	public function getMaintainer(){
 		return static::MAINTAINER;
 	}
 
+	/** {@inheritdoc} */
 	public function getName(){
-		// Return cached name when bridge is using cached data
-		if(isset($this->extraInfos)){
-			return $this->extraInfos['name'];
-		}
-
 		return static::NAME;
 	}
 
+	/** {@inheritdoc} */
+	public function getIcon(){
+		return '';
+	}
+
+	/** {@inheritdoc} */
 	public function getParameters(){
 		return static::PARAMETERS;
 	}
 
+	/** {@inheritdoc} */
 	public function getURI(){
-		// Return cached uri when bridge is using cached data
-		if(isset($this->extraInfos)){
-			return $this->extraInfos['uri'];
-		}
-
 		return static::URI;
 	}
 
-	public function getExtraInfos(){
-		return array(
-			'name' => $this->getName(),
-			'uri' => $this->getURI()
-		);
+	/** {@inheritdoc} */
+	public function getCacheTimeout(){
+		return static::CACHE_TIMEOUT;
 	}
 
-	public function setCache(\CacheInterface $cache){
-		$this->cache = $cache;
+	/** {@inheritdoc} */
+	public function detectParameters($url){
+		$regex = '/^(https?:\/\/)?(www\.)?(.+?)(\/)?$/';
+		if(empty(static::PARAMETERS)
+		&& preg_match($regex, $url, $urlMatches) > 0
+		&& preg_match($regex, static::URI, $bridgeUriMatches) > 0
+		&& $urlMatches[3] === $bridgeUriMatches[3]) {
+			return array();
+		} else {
+			return null;
+		}
 	}
 }

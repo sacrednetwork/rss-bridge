@@ -15,24 +15,18 @@ class FB2Bridge extends BridgeAbstract {
 		)
 	));
 
+	public function getIcon() {
+		return 'https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico';
+	}
+
 	public function collectData(){
-
-		function extractFromDelimiters($string, $start, $end){
-			if(strpos($string, $start) !== false){
-				$section_retrieved = substr($string, strpos($string, $start) + strlen($start));
-				$section_retrieved = substr($section_retrieved, 0, strpos($section_retrieved, $end));
-				return $section_retrieved;
-			}
-
-			return false;
-		}
 
 		//Utility function for cleaning a Facebook link
 		$unescape_fb_link = function($matches){
-			if(is_array($matches) && count($matches) > 1){
+			if(is_array($matches) && count($matches) > 1) {
 				$link = $matches[1];
 				if(strpos($link, '/') === 0)
-					$link = self::URI . $link . '"';
+					$link = self::URI . substr($link, 1);
 				if(strpos($link, 'facebook.com/l.php?u=') !== false)
 					$link = urldecode(extractFromDelimiters($link, 'facebook.com/l.php?u=', '&'));
 				return ' href="' . $link . '"';
@@ -72,43 +66,66 @@ class FB2Bridge extends BridgeAbstract {
 			return $matches[0];
 		};
 
-		if($this->getInput('u') !== null){
+		if($this->getInput('u') !== null) {
 			$page = 'https://touch.facebook.com/' . $this->getInput('u');
 			$cookies = $this->getCookies($page);
-			$pageID = $this->getPageID($page, $cookies);
+			$pageInfo = $this->getPageInfos($page, $cookies);
 
-			if($pageID === null){
-				echo <<<EOD
+			if($pageInfo['userId'] === null) {
+				returnClientError(<<<EOD
 Unable to get the page id. You should consider getting the ID by hand, then importing it into FB2Bridge
-EOD;
-				die();
+EOD
+			);
+			} elseif($pageInfo['userId'] == -1) {
+				returnClientError(<<<EOD
+This page is not accessible without being logged in.
+EOD
+			);
 			}
 		}
 
 		//Build the string for the first request
-		$requestString = 'https://touch.facebook.com/pages_reaction_units/more/?page_id='
-		. $pageID
-		. '&cursor={"card_id"%3A"videos"%2C"has_next_page"%3Atrue}&surface=mobile_page_home&unit_count=8';
-
-		$fileContent = file_get_contents($requestString);
-
-		$articleIndex = 0;
-		$maxArticle = 3;
-
+		$requestString = 'https://touch.facebook.com/page_content_list_view/more/?page_id='
+		. $pageInfo['userId']
+		. '&start_cursor=1&num_to_fetch=105&surface_type=timeline';
+		$fileContent = getContents($requestString);
 		$html = $this->buildContent($fileContent);
-		$author = $this->getInput('u');
+		$author = $pageInfo['username'];
 
-		foreach($html->find("article") as $content){
+		foreach($html->find('article') as $content) {
 
 			$item = array();
-			$item['uri'] = "http://touch.facebook.com"
-			. $content->find("div._52jc", 0)->find("a", 0)->getAttribute("href");
 
-			$content->find("header", 0)->innertext = "";
-			$content->find("footer", 0)->innertext = "";
+			preg_match('/publish_time\\\":([0-9]+),/', $content->getAttribute('data-store', 0), $match);
+			if(isset($match[1]))
+				$timestamp = $match[1];
+			else
+				$timestamp = 0;
+
+			$item['uri'] = html_entity_decode('http://touch.facebook.com'
+			. $content->find("div[class='_52jc _5qc4 _78cz _24u0 _36xo']", 0)->find('a', 0)->getAttribute('href'), ENT_QUOTES);
+
+			//Decode images
+			$imagecleaned = preg_replace_callback('/<i [^>]* style="[^"]*url\(\'(.*?)\'\).*?><\/i>/m', function ($matches) {
+					return "<img src='" . str_replace(['\\3a ', '\\3d ', '\\26 '], [':', '=', '&'], $matches[1]) . "' />";
+				}, $content);
+			$content = str_get_html($imagecleaned);
+
+			if($content->find('header', 0) !== null) {
+				$content->find('header', 0)->innertext = '';
+			}
+
+			if($content->find('footer', 0) !== null) {
+				$content->find('footer', 0)->innertext = '';
+			}
+
+			// Replace emoticon images by their textual representation (part of the span)
+			foreach($content->find('span[title*="emoticon"]') as $emoticon) {
+				$emoticon->innertext = $emoticon->find('span[aria-hidden="true"]', 0)->innertext;
+			}
 
 			//Remove html nodes, keep only img, links, basic formatting
-			$content = strip_tags($content, '<a><img><i><u><br><p>');
+			$content = strip_tags($content, '<a><img><i><u><br><p><h3><h4><section>');
 
 			//Adapt link hrefs: convert relative links into absolute links and bypass external link redirection
 			$content = preg_replace_callback('/ href=\"([^"]+)\"/i', $unescape_fb_link, $content);
@@ -121,7 +138,6 @@ EOD;
 				'ajaxify',
 				'tabindex',
 				'class',
-				'style',
 				'data-[^=]*',
 				'aria-[^=]*',
 				'role',
@@ -134,7 +150,36 @@ EOD;
 			// "<i><u>smile emoticon</u></i>" back to ASCII emoticons eg ":)"
 			$content = preg_replace_callback('/<i><u>([^ <>]+) ([^<>]+)<\/u><\/i>/i', $unescape_fb_emote, $content);
 
-			$item['content'] = $content;
+			//Remove the "...Plus" tag
+			$content = preg_replace(
+				'/… (<span>|)<a href="https:\/\/www\.facebook\.com\/story\.php\?story_fbid=.*?<\/a>/m',
+				'', $content, 1);
+
+			//Remove tracking images
+			$content = preg_replace('/<img src=\'.*?safe_image\.php.*?\' \/>/m', '', $content);
+
+			//Remove the double section tags
+			$content = str_replace(['<section><section>', '</section></section>'], ['<section>', '</section>'], $content);
+
+			//Move the section tag link upper, if it is down
+			$content = str_get_html($content);
+			$sectionContent = $content->find('section', 0);
+			if($sectionContent != null) {
+				$sectionLink = $sectionContent->nextSibling();
+				if($sectionLink != null) {
+					$fullLink = '<a href="' . $sectionLink->getAttribute('href') . '">' . $sectionContent->innertext . '</a>';
+					$sectionContent->innertext = $fullLink;
+				}
+			}
+
+			//Move the href tag upper if it is inside the section
+			foreach($content->find('section > a') as $sectionToFix) {
+				$sectionLink = $sectionToFix->getAttribute('href');
+				$section = $sectionToFix->parent();
+				$section->outertext = '<a href="' . $sectionLink . '">' . $section . '</a>';
+			}
+
+			$item['content'] = html_entity_decode($content, ENT_QUOTES);
 
 			$title = $author;
 			if (strlen($title) > 24)
@@ -143,59 +188,29 @@ EOD;
 			if (strlen($title) > 64)
 				$title = substr($title, 0, strpos(wordwrap($title, 64), "\n")) . '...';
 
-			$item['title'] = $title;
-			$item['author'] = $author;
+			$item['title'] = html_entity_decode($title, ENT_QUOTES);
+			$item['author'] = html_entity_decode($author, ENT_QUOTES);
+			$item['timestamp'] = html_entity_decode($timestamp, ENT_QUOTES);
 
-			array_push($this->items, $item);
+			if($item['timestamp'] != 0)
+				array_push($this->items, $item);
 		}
-	}
 
-
-	// Currently not used. Is used to get more than only 3 elements, as they appear on another page.
-	private function computeNextLink($string, $pageID){
-
-		$regex = implode(
-			'',
-			array(
-				"/timeline_unit",
-				"\\\\\\\\u00253A1",
-				"\\\\\\\\u00253A([0-9]*)",
-				"\\\\\\\\u00253A([0-9]*)",
-				"\\\\\\\\u00253A([0-9]*)",
-				"\\\\\\\\u00253A([0-9]*)/"
-			)
-		);
-
-		preg_match($regex, $string, $result);
-
-		return implode(
-			'',
-			array(
-				"https://touch.facebook.com/pages_reaction_units/more/?page_id=",
-				$pageID,
-				"&cursor=%7B%22timeline_cursor%22%3A%22timeline_unit%3A1%3A",
-				$result[1],
-				"%3A",
-				$result[2],
-				"%3A",
-				$result[3],
-				"%3A",
-				$result[4],
-				"%22%2C%22timeline_section_cursor%22%3A%7B%7D%2C%22",
-				"has_next_page%22%3Atrue%7D&surface=mobile_page_home&unit_count=3"
-			)
-		);
 	}
 
 	//Builds the HTML from the encoded JS that Facebook provides.
 	private function buildContent($pageContent){
-
-		$regex = "/\\\"html\\\":\\\"(.*?)\\\",\\\"replace/";
+		// The html ends with:
+		// /div>","replaceifexists
+		$regex = '/\\"html\\":(\".+\/div>"),"replace/';
 		preg_match($regex, $pageContent, $result);
 
-		return str_get_html(html_entity_decode(json_decode('"' . $result[1] . '"')));
-	}
+		$htmlContent = json_decode($result[1]);
+		$htmlContent = preg_replace('/(?<!style)="(.*?)"/', '=\'$1\'', $htmlContent);
+		$htmlContent = html_entity_decode($htmlContent, ENT_QUOTES, 'UTF-8');
 
+		return str_get_html($htmlContent);
+	}
 
 	//Builds the cookie from the page, as Facebook sometimes refuses to give
 	//the page if no cookie is provided.
@@ -203,7 +218,7 @@ EOD;
 
 		$ctx = stream_context_create(array(
 			'http' => array(
-				'user_agent' => "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0",
+				'user_agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0',
 				'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
 				)
 			)
@@ -211,24 +226,24 @@ EOD;
 		$a = file_get_contents($pageURL, 0, $ctx);
 
 		//First request to get the cookie
-		$cookies = "";
-		foreach($http_response_header as $hdr){
-			if(strpos($hdr, "Set-Cookie") !== false){
-				$cLine = explode(":", $hdr)[1];
-				$cLine = explode(";", $cLine)[0];
-				$cookies .= ";" . $cLine;
+		$cookies = '';
+		foreach($http_response_header as $hdr) {
+			if(strpos($hdr, 'Set-Cookie') !== false) {
+				$cLine = explode(':', $hdr)[1];
+				$cLine = explode(';', $cLine)[0];
+				$cookies .= ';' . $cLine;
 			}
 		}
 
 		return substr($cookies, 1);
 	}
 
-	//Get the page ID from the Facebook page.
-	private function getPageID($page, $cookies){
+	//Get the page ID and username from the Facebook page.
+	private function getPageInfos($page, $cookies){
 
 		$context = stream_context_create(array(
 			'http' => array(
-				'user_agent' => "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0",
+				'user_agent' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0',
 				'header' => 'Cookie: ' . $cookies
 				)
 			)
@@ -236,19 +251,32 @@ EOD;
 
 		$pageContent = file_get_contents($page, 0, $context);
 
+		if(strpos($pageContent, 'signup-button') != false) {
+			return -1;
+		}
+
+		//Get the username
+		$usernameRegex = '/data-nt=\"FB:TEXT4\">(.*?)<\/div>/m';
+		preg_match($usernameRegex, $pageContent, $usernameMatches);
+		if(count($usernameMatches) > 0) {
+			$username = strip_tags($usernameMatches[1]);
+		} else {
+			$username = $this->getInput('u');
+		}
+
 		//Get the page ID if we don't have a captcha
-		$regex = "/page_id=([0-9]*)&/";
+		$regex = '/page_id=([0-9]*)&/';
 		preg_match($regex, $pageContent, $matches);
 
-		if(count($matches) > 0){
-			return $matches[1];
+		if(count($matches) > 0) {
+			return array('userId' => $matches[1], 'username' => $username);
 		}
 
 		//Get the page ID if we do have a captcha
-		$regex = "/\"pageID\":\"([0-9]*)\"/";
+		$regex = '/"pageID":"([0-9]*)"/';
 		preg_match($regex, $pageContent, $matches);
 
-		return $matches[1];
+		return array('userId' => $matches[1], 'username' => $username);
 
 	}
 
@@ -258,9 +286,5 @@ EOD;
 
 	public function getURI(){
 		return 'http://facebook.com';
-	}
-
-	public function getCacheDuration(){
-		return 60 * 60 * 3; // 5 minutes
 	}
 }

@@ -16,20 +16,25 @@ class WhydBridge extends BridgeAbstract {
 
 	private $userName = '';
 
+	public function getIcon() {
+		return self::URI . 'assets/favicons/
+32-6b62a9f14d5e1a9213090d8f00f286bba3a6022381a76390d1d0926493b12593.png?v=6';
+	}
+
 	public function collectData(){
 		$html = '';
-		if(strlen(preg_replace("/[^0-9a-f]/", '', $this->getInput('u'))) == 24){
+		if(strlen(preg_replace('/[^0-9a-f]/', '', $this->getInput('u'))) == 24) {
 			// is input the userid ?
 			$html = getSimpleHTMLDOM(
-				self::URI . 'u/' . preg_replace("/[^0-9a-f]/", '', $this->getInput('u'))
+				self::URI . 'u/' . preg_replace('/[^0-9a-f]/', '', $this->getInput('u'))
 			) or returnServerError('No results for this query.');
 		} else { // input may be the username
 			$html = getSimpleHTMLDOM(
 				self::URI . 'search?q=' . urlencode($this->getInput('u'))
 			) or returnServerError('No results for this query.');
 
-			for($j = 0; $j < 5; $j++){
-				if(strtolower($html->find('div.user', $j)->find('a', 0)->plaintext) == strtolower($this->getInput('u'))){
+			for($j = 0; $j < 5; $j++) {
+				if(strtolower($html->find('div.user', $j)->find('a', 0)->plaintext) == strtolower($this->getInput('u'))) {
 					$html = getSimpleHTMLDOM(
 						self::URI . $html->find('div.user', $j)->find('a', 0)->getAttribute('href')
 					) or returnServerError('No results for this query');
@@ -39,7 +44,7 @@ class WhydBridge extends BridgeAbstract {
 		}
 		$this->userName = $html->find('div#profileTop', 0)->find('h1', 0)->plaintext;
 
-		for($i = 0; $i < 10; $i++){
+		for($i = 0; $i < 10; $i++) {
 			$track = $html->find('div.post', $i);
 			$item = array();
 			$item['author'] = $track->find('h2', 0)->plaintext;
@@ -50,6 +55,7 @@ class WhydBridge extends BridgeAbstract {
 			$this->items[] = $item;
 		}
 	}
+
 	public function getName(){
 		return (!empty($this->userName) ? $this->userName . ' - ' : '') . 'Whyd Bridge';
 	}

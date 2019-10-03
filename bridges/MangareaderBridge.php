@@ -13,7 +13,6 @@ class MangareaderBridge extends BridgeAbstract {
 			'category' => array(
 				'name' => 'Category',
 				'type' => 'list',
-				'required' => true,
 				'values' => array(
 					'All' => 'all',
 					'Action' => 'action',
@@ -80,7 +79,7 @@ class MangareaderBridge extends BridgeAbstract {
 	public function collectData(){
 		// We'll use the DOM parser for this as it makes navigation easier
 		$html = getContents($this->getURI());
-		if(!$html){
+		if(!$html) {
 			returnClientError('Could not receive data for ' . $path . '!');
 		}
 		libxml_use_internal_errors(true);
@@ -92,7 +91,7 @@ class MangareaderBridge extends BridgeAbstract {
 		$xpath = new DomXPath($doc);
 
 		$this->request = '';
-		switch($this->queriedContext){
+		switch($this->queriedContext) {
 		case 'Get latest updates':
 			$this->request = 'Latest updates';
 			$this->getLatestUpdates($xpath);
@@ -100,12 +99,12 @@ class MangareaderBridge extends BridgeAbstract {
 		case 'Get popular mangas':
 			// Find manga name within "Popular mangas for ..."
 			$pagetitle = $xpath->query(".//*[@id='bodyalt']/h1")->item(0)->nodeValue;
-			$this->request = substr($pagetitle, 0, strrpos($pagetitle, " -"));
+			$this->request = substr($pagetitle, 0, strrpos($pagetitle, ' -'));
 			$this->getPopularMangas($xpath);
 			break;
 		case 'Get manga updates':
 			$limit = $this->getInput('limit');
-			if(empty($limit)){
+			if(empty($limit)) {
 				$limit = self::PARAMETERS[$this->queriedContext]['limit']['defaultValue'];
 			}
 
@@ -118,9 +117,9 @@ class MangareaderBridge extends BridgeAbstract {
 		}
 
 		// Return some dummy-data if no content available
-		if(empty($this->items)){
+		if(empty($this->items)) {
 			$item = array();
-			$item['content'] = "<p>No updates available</p>";
+			$item['content'] = '<p>No updates available</p>';
 
 			$this->items[] = $item;
 		}
@@ -130,31 +129,31 @@ class MangareaderBridge extends BridgeAbstract {
 		// Query each item (consists of Manga + chapters)
 		$nodes = $xpath->query("//*[@id='latestchapters']/table//td");
 
-		foreach ($nodes as $node){
+		foreach ($nodes as $node) {
 			// Query the manga
 			$manga = $xpath->query("a[@class='chapter']", $node)->item(0);
 
 			// Collect the chapters for each Manga
 			$chapters = $xpath->query("a[@class='chaptersrec']", $node);
 
-			if (isset($manga) && $chapters->length >= 1){
+			if (isset($manga) && $chapters->length >= 1) {
 				$item = array();
 				$item['uri'] = self::URI . htmlspecialchars($manga->getAttribute('href'));
 				$item['title'] = htmlspecialchars($manga->nodeValue);
 
 				// Add each chapter to the feed
-				$item['content'] = "";
+				$item['content'] = '';
 
-				foreach ($chapters as $chapter){
-					if($item['content'] <> ""){
-						$item['content'] .= "<br>";
+				foreach ($chapters as $chapter) {
+					if($item['content'] <> '') {
+						$item['content'] .= '<br>';
 					}
 					$item['content'] .= "<a href='"
 						. self::URI
 						. htmlspecialchars($chapter->getAttribute('href'))
 						. "'>"
 						. htmlspecialchars($chapter->nodeValue)
-						. "</a>";
+						. '</a>';
 				}
 
 				$this->items[] = $item;
@@ -166,7 +165,7 @@ class MangareaderBridge extends BridgeAbstract {
 		// Query all mangas
 		$mangas = $xpath->query("//*[@id='mangaresults']/*[@class='mangaresultitem']");
 
-		foreach ($mangas as $manga){
+		foreach ($mangas as $manga) {
 
 			// The thumbnail is encrypted in a css-style...
 			// format: "background-image:url('<the part which is actually interesting>')"
@@ -203,21 +202,21 @@ EOD;
 	private function getMangaUpdates($xpath, $limit){
 		$query = "(.//*[@id='listing']//tr)[position() > 1]";
 
-		if($limit !== -1){
+		if($limit !== -1) {
 			$query = "(.//*[@id='listing']//tr)[position() > 1][position() > last() - {$limit}]";
 		}
 
 		$chapters = $xpath->query($query);
 
-		foreach ($chapters as $chapter){
+		foreach ($chapters as $chapter) {
 			$item = array();
-			$item['title'] = htmlspecialchars($xpath->query("td[1]", $chapter)
+			$item['title'] = htmlspecialchars($xpath->query('td[1]', $chapter)
 				->item(0)
 				->nodeValue);
-			$item['uri'] = self::URI . $xpath->query("td[1]/a", $chapter)
+			$item['uri'] = self::URI . $xpath->query('td[1]/a', $chapter)
 				->item(0)
 				->getAttribute('href');
-			$item['timestamp'] = strtotime($xpath->query("td[2]", $chapter)
+			$item['timestamp'] = strtotime($xpath->query('td[2]', $chapter)
 				->item(0)
 				->nodeValue);
 			array_unshift($this->items, $item);
@@ -225,14 +224,14 @@ EOD;
 	}
 
 	public function getURI(){
-		switch($this->queriedContext){
+		switch($this->queriedContext) {
 		case 'Get latest updates':
-			$path = "latest";
+			$path = 'latest';
 			break;
 		case 'Get popular mangas':
-			$path = "popular";
-			if($this->getInput('category') !== "all"){
-				$path .= "/" . $this->getInput('category');
+			$path = 'popular';
+			if($this->getInput('category') !== 'all') {
+				$path .= '/' . $this->getInput('category');
 			}
 			break;
 		case 'Get manga updates':

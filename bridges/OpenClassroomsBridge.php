@@ -11,7 +11,6 @@ class OpenClassroomsBridge extends BridgeAbstract {
 		'u' => array(
 			'name' => 'Catégorie',
 			'type' => 'list',
-			'required' => true,
 			'values' => array(
 				'Arts & Culture' => 'arts',
 				'Code' => 'code',
@@ -27,7 +26,7 @@ class OpenClassroomsBridge extends BridgeAbstract {
 	));
 
 	public function getURI(){
-		if(!is_null($this->getInput('u'))){
+		if(!is_null($this->getInput('u'))) {
 			return self::URI . '/courses?categories=' . $this->getInput('u') . '&title=&sort=updatedAt+desc';
 		}
 
@@ -38,7 +37,7 @@ class OpenClassroomsBridge extends BridgeAbstract {
 		$html = getSimpleHTMLDOM($this->getURI())
 			or returnServerError('Could not request OpenClassrooms.');
 
-		foreach($html->find('.courseListItem') as $element){
+		foreach($html->find('.courseListItem') as $element) {
 				$item = array();
 				$item['uri'] = self::URI . $element->find('a', 0)->href;
 				$item['title'] = $element->find('h3', 0)->plaintext;

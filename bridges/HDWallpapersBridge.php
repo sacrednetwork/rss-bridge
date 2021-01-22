@@ -2,7 +2,7 @@
 class HDWallpapersBridge extends BridgeAbstract {
 	const MAINTAINER = 'nel50n';
 	const NAME = 'HD Wallpapers Bridge';
-	const URI = 'http://www.hdwallpapers.in/';
+	const URI = 'https://www.hdwallpapers.in/';
 	const CACHE_TIMEOUT = 43200; //12h
 	const DESCRIPTION = 'Returns the latests wallpapers from HDWallpapers';
 
@@ -32,7 +32,7 @@ class HDWallpapersBridge extends BridgeAbstract {
 		$lastpage = 1;
 
 		for($page = 1; $page <= $lastpage; $page++) {
-			$link = self::URI . '/' . $category . '/page/' . $page;
+			$link = self::URI . $category . '/page/' . $page;
 			$html = getSimpleHTMLDOM($link)
 				or returnServerError('No results for this query.');
 
@@ -41,13 +41,16 @@ class HDWallpapersBridge extends BridgeAbstract {
 				$lastpage = min($matches[1], ceil($max / 14));
 			}
 
+			$html = defaultLinkTo($html, self::URI);
+
 			foreach($html->find('.wallpapers .wall a') as $element) {
 				$thumbnail = $element->find('img', 0);
 
+				$search = array(self::URI, 'wallpapers.html');
+				$replace = array(self::URI . 'download/', $this->getInput('r') . '.jpg');
+
 				$item = array();
-				$item['uri'] = self::URI
-				. '/download'
-				. str_replace('wallpapers.html', $this->getInput('r') . '.jpg', $element->href);
+				$item['uri'] = str_replace($search, $replace, $element->href);
 
 				$item['timestamp'] = time();
 				$item['title'] = $element->find('em1', 0)->text();
@@ -55,7 +58,6 @@ class HDWallpapersBridge extends BridgeAbstract {
 				. '<br><a href="'
 				. $item['uri']
 				. '"><img src="'
-				. self::URI
 				. $thumbnail->src
 				. '" /></a>';
 
@@ -72,7 +74,7 @@ class HDWallpapersBridge extends BridgeAbstract {
 	public function getName(){
 		if(!is_null($this->getInput('c')) && !is_null($this->getInput('r'))) {
 			return 'HDWallpapers - '
-			. str_replace(['__', '_'], [' & ', ' '], $this->getInput('c'))
+			. str_replace(array('__', '_'), array(' & ', ' '), $this->getInput('c'))
 			. ' ['
 			. $this->getInput('r')
 			. ']';

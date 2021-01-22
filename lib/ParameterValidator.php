@@ -135,6 +135,9 @@ class ParameterValidator {
 			return false;
 
 		foreach($data as $name => $value) {
+			// Some RSS readers add a cache-busting parameter (_=<timestamp>) to feed URLs, detect and ignore them.
+			if ($name === '_') continue;
+
 			$registered = false;
 			foreach($parameters as $context => $set) {
 				if(array_key_exists($name, $set)) {
@@ -190,6 +193,13 @@ class ParameterValidator {
 		// Detect matching context
 		foreach($parameters as $context => $set) {
 			$queriedContexts[$context] = null;
+
+			// Ensure all user data exist in the current context
+			$notInContext = array_diff_key($data, $set);
+			if(array_key_exists('global', $parameters))
+				$notInContext = array_diff_key($notInContext, $parameters['global']);
+			if(sizeof($notInContext) > 0)
+				continue;
 
 			// Check if all parameters of the context are satisfied
 			foreach($set as $id => $properties) {
